@@ -1,8 +1,12 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {NavigationContainer} from '@react-navigation/native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {createStackNavigator} from '@react-navigation/stack';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
+import { OnboardingProvider, useOnboarding } from './src/contexts/OnboardingContext';
+import OnboardingNavigator from './src/navigation/OnboardingNavigator';
+
+
 
 // 임시 화면 컴포넌트들
 import {View, Text, StyleSheet} from 'react-native';
@@ -102,15 +106,50 @@ const TabNavigator = () => (
   </Tab.Navigator>
 );
 
+// 앱 컨텐츠 컴포넌트
+const AppContent: React.FC = () => {
+  const { isOnboardingComplete } = useOnboarding();
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // 실제 앱에서는 AsyncStorage나 다른 저장소에서 온보딩 완료 상태를 확인
+    // 현재는 임시로 1초 후 로딩 완료로 설정
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (isLoading) {
+    return (
+      <View style={styles.loadingScreen}>
+        <Text style={styles.loadingText}>GymMate</Text>
+        <Text style={styles.loadingSubtext}>개인 맞춤형 운동 파트너</Text>
+      </View>
+    );
+  }
+
+  return (
+    <Stack.Navigator screenOptions={{headerShown: false}}>
+      {!isOnboardingComplete ? (
+        <Stack.Screen name="Onboarding" component={OnboardingNavigator} />
+      ) : (
+        <Stack.Screen name="Main" component={TabNavigator} />
+      )}
+    </Stack.Navigator>
+  );
+};
+
 // 메인 앱 컴포넌트
 const App = () => {
   return (
     <SafeAreaProvider>
-      <NavigationContainer>
-        <Stack.Navigator screenOptions={{headerShown: false}}>
-          <Stack.Screen name="Main" component={TabNavigator} />
-        </Stack.Navigator>
-      </NavigationContainer>
+      <OnboardingProvider>
+        <NavigationContainer>
+          <AppContent />
+        </NavigationContainer>
+      </OnboardingProvider>
     </SafeAreaProvider>
   );
 };
@@ -133,6 +172,22 @@ const styles = StyleSheet.create({
     color: '#8E8E93',
     textAlign: 'center',
     paddingHorizontal: 20,
+  },
+  loadingScreen: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F2F2F7',
+  },
+  loadingText: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#007AFF',
+    marginBottom: 8,
+  },
+  loadingSubtext: {
+    fontSize: 16,
+    color: '#8E8E93',
   },
 });
 

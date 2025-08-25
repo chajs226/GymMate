@@ -170,3 +170,4 @@ export const isEquipmentType = (value: string): value is typeof EQUIPMENT_TYPES[
 export const isMuscleGroup = (value: string): value is typeof MUSCLE_GROUPS[number] => {
   return MUSCLE_GROUPS.includes(value as any);
 };
+

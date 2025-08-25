@@ -1,7 +1,45 @@
 import { supabase } from '../config/supabase';
+import { Routine, Exercise, UserProfile, RoutineExercise, WorkoutLog } from '../types/database';
+
+
 
 // 데이터베이스 서비스 클래스
 export class DatabaseService {
+  // Supabase 연결 상태 확인
+  static async testConnection() {
+    try {
+      console.log('🔍 Supabase 연결 테스트 중...');
+      
+      // 더 간단한 쿼리로 연결 상태 확인
+      const { data, error } = await supabase
+        .from('routines')
+        .select('*')
+        .limit(1);
+
+      if (error) {
+        console.error('❌ Supabase 연결 실패:', error);
+        return {
+          connected: false,
+          error: error.message,
+          details: error
+        };
+      }
+
+      console.log('✅ Supabase 연결 성공');
+      return {
+        connected: true,
+        data: data
+      };
+    } catch (error) {
+      console.error('❌ Supabase 연결 테스트 중 예외 발생:', error);
+      return {
+        connected: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        details: error
+      };
+    }
+  }
+
   // 사용자 프로필 관련 메서드
   static async getUserProfile(userId: string) {
     const { data, error } = await supabase
@@ -22,17 +60,25 @@ export class DatabaseService {
     goal: 'Muscle Gain' | 'Fat Loss' | 'General Fitness';
     frequency: '2 days/week' | '3 days/week' | '4 days/week';
   }) {
-    const { data, error } = await supabase
-      .from('user_profiles')
-      .insert(profile)
-      .select()
-      .single();
+    try {
+      console.log('🌐 Supabase에 프로필 생성 중...');
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .insert(profile)
+        .select()
+        .single();
 
-    if (error) {
-      throw new Error(`사용자 프로필 생성 실패: ${error.message}`);
+      if (error) {
+        console.error('❌ 프로필 생성 실패:', error);
+        throw new Error(`사용자 프로필 생성 실패: ${error.message}`);
+      }
+
+      console.log('✅ 프로필 생성 성공:', data);
+      return data;
+    } catch (error) {
+      console.error('❌ 프로필 생성 중 예외 발생:', error);
+      throw error;
     }
-
-    return data;
   }
 
   static async updateUserProfile(userId: string, updates: Partial<{
@@ -273,19 +319,29 @@ export class DatabaseService {
 
   // PRD 요구사항에 따른 루틴 매핑 로직
   static async getRoutineByUserPreferences(goal: string, frequency: string) {
-    const { data, error } = await supabase
-      .from('routines')
-      .select('*')
-      .eq('goal', goal)
-      .eq('frequency', frequency)
-      .eq('difficulty', 'beginner')
-      .single();
+    try {
+      console.log('🌐 Supabase에서 루틴 조회 중...');
+      console.log(`   목표: ${goal}, 빈도: ${frequency}`);
+      
+      const { data, error } = await supabase
+        .from('routines')
+        .select('*')
+        .eq('goal', goal)
+        .eq('frequency', frequency)
+        .eq('difficulty', 'beginner')
+        .single();
 
-    if (error) {
-      throw new Error(`루틴 매핑 실패: ${error.message}`);
+      if (error) {
+        console.error('❌ Supabase 루틴 조회 실패:', error);
+        throw new Error(`루틴 매핑 실패: ${error.message}`);
+      }
+
+      console.log('✅ 루틴 조회 성공:', data);
+      return data;
+    } catch (error) {
+      console.error('❌ 루틴 조회 중 예외 발생:', error);
+      throw error;
     }
-
-    return data;
   }
 
   // 오늘의 운동 조회 (사용자 ID와 요일 기반)
@@ -393,3 +449,4 @@ export const DatabaseUtils = {
     return koreanGroups.join(' & ') || '전신';
   }
 };
+

@@ -165,3 +165,4 @@ CREATE TRIGGER update_exercises_updated_at BEFORE UPDATE ON exercises
 
 CREATE TRIGGER update_routines_updated_at BEFORE UPDATE ON routines
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
