@@ -1,64 +1,13 @@
 # GymMate
 
-GymMate는 초보자들을 위한 개인화된 운동 루틴과 짧은 비디오 가이드를 제공하는 모바일 애플리케이션입니다. 개인 트레이너의 저렴한 대안으로 효과적이고 자신감 있게 운동할 수 있도록 도와줍니다.
-
-## 주요 기능
-
-- **개인화된 운동 루틴**: 사용자의 목표와 빈도에 맞춘 맞춤형 운동 계획
-- **운동 가이드**: 각 운동의 올바른 자세를 보여주는 짧은 비디오
-- **대체 운동 제안**: 원하는 기구가 사용 중일 때 대체 운동 추천
-- **진행상황 추적**: 운동 성과를 기록하고 진행상황을 시각화
+GymMate는 초보자들을 위한 개인화된 워크아웃 루틴을 제공하는 모바일 애플리케이션입니다.
 
 ## 기술 스택
 
-- **Frontend**: React Native 0.81.0 with TypeScript
-- **Backend**: Supabase (Authentication, Database)
-- **Navigation**: React Navigation v6
-- **Code Quality**: ESLint, Prettier, Husky
-
-## 시작하기
-
-### 필수 요구사항
-
-- Node.js 18 이상
-- React Native CLI
-- iOS: Xcode 14 이상
-- Android: Android Studio 및 Android SDK
-
-### 설치
-
-1. 저장소 클론
-```bash
-git clone <repository-url>
-cd GymMate
-```
-
-2. 의존성 설치
-```bash
-npm install
-```
-
-3. iOS 의존성 설치 (iOS 개발 시)
-```bash
-cd ios && pod install && cd ..
-```
-
-### 실행
-
-#### iOS
-```bash
-npm run ios
-```
-
-#### Android
-```bash
-npm run android
-```
-
-#### Metro 서버 시작
-```bash
-npm start
-```
+- **Frontend**: React Native 0.81.0
+- **Backend**: Supabase (PostgreSQL)
+- **Navigation**: React Navigation
+- **Language**: TypeScript
 
 ## 프로젝트 구조
 
@@ -66,70 +15,129 @@ npm start
 GymMate/
 ├── src/
 │   ├── config/
-│   │   └── supabase.ts      # Supabase 설정 및 타입 정의
-│   ├── components/          # 재사용 가능한 컴포넌트
-│   ├── screens/            # 화면 컴포넌트
-│   ├── navigation/         # 네비게이션 설정
-│   ├── services/           # API 서비스
-│   └── utils/              # 유틸리티 함수
-├── android/                # Android 네이티브 코드
-├── ios/                    # iOS 네이티브 코드
-└── __tests__/              # 테스트 파일
+│   │   └── supabase.ts          # Supabase 클라이언트 설정
+│   ├── services/
+│   │   └── database.ts          # 데이터베이스 서비스 레이어
+│   └── types/
+│       └── database.ts          # 데이터베이스 타입 정의
+├── supabase/
+│   └── migrations/
+│       └── 001_initial_schema.sql  # 초기 데이터베이스 스키마
+├── scripts/
+│   └── seed-data.js             # 초기 데이터 시딩 스크립트
+└── App.tsx                      # 메인 앱 컴포넌트
 ```
 
-## 개발 가이드라인
+## 데이터베이스 설정
 
-### 코드 품질
+### 1. Supabase 프로젝트 생성
 
-- ESLint와 Prettier를 사용한 코드 포맷팅
-- Husky를 통한 커밋 전 자동 린팅
-- TypeScript를 사용한 타입 안전성
+1. [Supabase](https://supabase.com)에서 새 프로젝트를 생성합니다.
+2. 프로젝트 설정에서 URL과 API 키를 확인합니다.
 
-### 네이밍 컨벤션
+### 2. 환경 변수 설정
 
-- 컴포넌트: PascalCase (예: `HomeScreen`)
-- 함수: camelCase (예: `getUserProfile`)
-- 상수: UPPER_SNAKE_CASE (예: `API_BASE_URL`)
-- 파일명: kebab-case (예: `user-profile.ts`)
+`.env` 파일을 생성하고 다음 변수들을 설정합니다:
 
-### 커밋 메시지
+```env
+SUPABASE_URL=your_supabase_project_url
+SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+```
 
-- feat: 새로운 기능
-- fix: 버그 수정
-- docs: 문서 수정
-- style: 코드 포맷팅
-- refactor: 코드 리팩토링
-- test: 테스트 추가/수정
+### 3. 데이터베이스 마이그레이션 실행
 
-## 환경 설정
+Supabase 대시보드의 SQL 편집기에서 다음 파일의 내용을 실행합니다:
 
-### Supabase 설정
+```sql
+-- supabase/migrations/001_initial_schema.sql 파일의 내용을 실행
+```
 
-1. Supabase 프로젝트 생성
-2. 환경 변수 설정:
-   ```bash
-   SUPABASE_URL=your_supabase_url
-   SUPABASE_ANON_KEY=your_supabase_anon_key
-   ```
+### 4. 초기 데이터 시딩
+
+```bash
+# 환경 변수 설정 후
+node scripts/seed-data.js
+```
+
+## 데이터베이스 스키마
+
+### 주요 테이블
+
+- **user_profiles**: 사용자 프로필 및 목표 설정
+- **exercises**: 운동 정보 (이름, 설명, 비디오 URL, 팁 등)
+- **routines**: 워크아웃 루틴 템플릿
+- **routine_exercises**: 루틴과 운동의 관계 (요일별, 순서별)
+- **alternative_exercises**: 대체 운동 관계
+- **user_routines**: 사용자별 할당된 루틴
+- **workout_logs**: 운동 완료 로그
+
+### 루틴 매핑 로직
+
+PRD 요구사항에 따라 다음과 같이 루틴이 매핑됩니다:
+
+- **Muscle Gain + 3 days/week** → "Beginner Strength 3-Day Split A"
+- **Fat Loss + 4 days/week** → "Beginner Fat Loss 4-Day Split"
+- **General Fitness + 2 days/week** → "Beginner General Fitness 2-Day Split"
+
+## 개발 가이드
+
+### 데이터베이스 서비스 사용
+
+```typescript
+import { DatabaseService } from './src/services/database';
+
+// 사용자 프로필 생성
+const profile = await DatabaseService.createUserProfile({
+  user_id: 'user-id',
+  goal: 'Muscle Gain',
+  frequency: '3 days/week'
+});
+
+// 오늘의 운동 조회
+const todaysWorkout = await DatabaseService.getTodaysWorkout(
+  'user-id',
+  DatabaseUtils.getCurrentDayOfWeek()
+);
+
+// 대체 운동 조회
+const alternative = await DatabaseService.getRandomAlternativeExercise('exercise-id');
+```
+
+### 타입 안전성
+
+모든 데이터베이스 작업은 TypeScript 타입을 통해 안전성을 보장합니다:
+
+```typescript
+import { Exercise, Routine, UserProfile } from './src/types/database';
+```
+
+## 보안
+
+- Row Level Security (RLS) 정책이 모든 테이블에 적용됩니다
+- 사용자는 자신의 데이터만 접근할 수 있습니다
+- 운동, 루틴 등 공개 데이터는 인증된 사용자만 읽기 가능합니다
+
+## 설치 및 실행
+
+```bash
+# 의존성 설치
+npm install
+
+# iOS 실행
+npm run ios
+
+# Android 실행
+npm run android
+
+# 개발 서버 시작
+npm start
+```
 
 ## 테스트
 
 ```bash
 npm test
-```
-
-## 빌드
-
-### iOS 릴리즈 빌드
-```bash
-cd ios
-xcodebuild -workspace GymMate.xcworkspace -scheme GymMate -configuration Release -destination generic/platform=iOS -archivePath GymMate.xcarchive archive
-```
-
-### Android 릴리즈 빌드
-```bash
-cd android
-./gradlew assembleRelease
 ```
 
 ## 라이선스
