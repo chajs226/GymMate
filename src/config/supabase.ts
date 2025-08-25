@@ -1,11 +1,19 @@
 import { createClient } from '@supabase/supabase-js';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Supabase 설정
 const supabaseUrl = 'https://raicdihqaxzpmqmpjtsf.supabase.co';
 const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhaWNkaWhxYXh6cG1xbXBqdHNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwMzYyMTksImV4cCI6MjA3MTYxMjIxOX0.8-E7z7e-dJ5wQgXUkTo5C-itBZU7fVPWuxbb33altKY';
 
-// Supabase 클라이언트 생성 (최소 설정)
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// React Native용 Supabase 클라이언트 생성
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    storage: AsyncStorage,
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: false, // React Native에서는 URL 감지 비활성화
+  },
+});
 
 // 인증 관련 타입 정의
 export interface AuthUser {
