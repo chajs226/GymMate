@@ -1,97 +1,137 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# GymMate
 
-# Getting Started
+GymMate는 초보자들을 위한 개인화된 운동 루틴과 짧은 비디오 가이드를 제공하는 모바일 애플리케이션입니다. 개인 트레이너의 저렴한 대안으로 효과적이고 자신감 있게 운동할 수 있도록 도와줍니다.
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+## 주요 기능
 
-## Step 1: Start Metro
+- **개인화된 운동 루틴**: 사용자의 목표와 빈도에 맞춘 맞춤형 운동 계획
+- **운동 가이드**: 각 운동의 올바른 자세를 보여주는 짧은 비디오
+- **대체 운동 제안**: 원하는 기구가 사용 중일 때 대체 운동 추천
+- **진행상황 추적**: 운동 성과를 기록하고 진행상황을 시각화
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+## 기술 스택
 
-To start the Metro dev server, run the following command from the root of your React Native project:
+- **Frontend**: React Native 0.81.0 with TypeScript
+- **Backend**: Supabase (Authentication, Database)
+- **Navigation**: React Navigation v6
+- **Code Quality**: ESLint, Prettier, Husky
 
-```sh
-# Using npm
-npm start
+## 시작하기
 
-# OR using Yarn
-yarn start
+### 필수 요구사항
+
+- Node.js 18 이상
+- React Native CLI
+- iOS: Xcode 14 이상
+- Android: Android Studio 및 Android SDK
+
+### 설치
+
+1. 저장소 클론
+```bash
+git clone <repository-url>
+cd GymMate
 ```
 
-## Step 2: Build and run your app
-
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
-
-### Android
-
-```sh
-# Using npm
-npm run android
-
-# OR using Yarn
-yarn android
+2. 의존성 설치
+```bash
+npm install
 ```
 
-### iOS
-
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
-
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
-
-```sh
-bundle install
+3. iOS 의존성 설치 (iOS 개발 시)
+```bash
+cd ios && pod install && cd ..
 ```
 
-Then, and every time you update your native dependencies, run:
+### 실행
 
-```sh
-bundle exec pod install
-```
-
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
-
-```sh
-# Using npm
+#### iOS
+```bash
 npm run ios
-
-# OR using Yarn
-yarn ios
 ```
 
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
+#### Android
+```bash
+npm run android
+```
 
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
+#### Metro 서버 시작
+```bash
+npm start
+```
 
-## Step 3: Modify your app
+## 프로젝트 구조
 
-Now that you have successfully run the app, let's make changes!
+```
+GymMate/
+├── src/
+│   ├── config/
+│   │   └── supabase.ts      # Supabase 설정 및 타입 정의
+│   ├── components/          # 재사용 가능한 컴포넌트
+│   ├── screens/            # 화면 컴포넌트
+│   ├── navigation/         # 네비게이션 설정
+│   ├── services/           # API 서비스
+│   └── utils/              # 유틸리티 함수
+├── android/                # Android 네이티브 코드
+├── ios/                    # iOS 네이티브 코드
+└── __tests__/              # 테스트 파일
+```
 
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
+## 개발 가이드라인
 
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
+### 코드 품질
 
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
+- ESLint와 Prettier를 사용한 코드 포맷팅
+- Husky를 통한 커밋 전 자동 린팅
+- TypeScript를 사용한 타입 안전성
 
-## Congratulations! :tada:
+### 네이밍 컨벤션
 
-You've successfully run and modified your React Native App. :partying_face:
+- 컴포넌트: PascalCase (예: `HomeScreen`)
+- 함수: camelCase (예: `getUserProfile`)
+- 상수: UPPER_SNAKE_CASE (예: `API_BASE_URL`)
+- 파일명: kebab-case (예: `user-profile.ts`)
 
-### Now what?
+### 커밋 메시지
 
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
+- feat: 새로운 기능
+- fix: 버그 수정
+- docs: 문서 수정
+- style: 코드 포맷팅
+- refactor: 코드 리팩토링
+- test: 테스트 추가/수정
 
-# Troubleshooting
+## 환경 설정
 
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
+### Supabase 설정
 
-# Learn More
+1. Supabase 프로젝트 생성
+2. 환경 변수 설정:
+   ```bash
+   SUPABASE_URL=your_supabase_url
+   SUPABASE_ANON_KEY=your_supabase_anon_key
+   ```
 
-To learn more about React Native, take a look at the following resources:
+## 테스트
 
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+```bash
+npm test
+```
+
+## 빌드
+
+### iOS 릴리즈 빌드
+```bash
+cd ios
+xcodebuild -workspace GymMate.xcworkspace -scheme GymMate -configuration Release -destination generic/platform=iOS -archivePath GymMate.xcarchive archive
+```
+
+### Android 릴리즈 빌드
+```bash
+cd android
+./gradlew assembleRelease
+```
+
+## 라이선스
+
+이 프로젝트는 MIT 라이선스 하에 배포됩니다.

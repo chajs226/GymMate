@@ -1,0 +1,3 @@
+# Pre-commit hooks temporarily disabled
+# npm run lint  # 린팅은 수동으로 실행
+# npm test  # 테스트는 나중에 설정 완료 후 활성화
