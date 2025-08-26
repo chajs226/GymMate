@@ -5,10 +5,12 @@ import {
   StyleSheet,
   TouchableOpacity,
   SafeAreaView,
+  Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useOnboarding } from '../../contexts/OnboardingContext';
 import { GOALS } from '../../types/database';
+import { supabase } from '../../config/supabase';
 
 interface GoalSelectionScreenProps {
   route: {
@@ -61,6 +63,111 @@ const GoalSelectionScreen: React.FC<GoalSelectionScreenProps> = ({ route }) => {
     }
   };
 
+  // 디버깅용: Supabase 연결 테스트
+  const debugTestConnection = async () => {
+    try {
+      console.log('🔍 Supabase 연결 테스트 중...');
+      
+      // 간단한 쿼리로 연결 상태 확인
+      const { data, error } = await supabase
+        .from('routines')
+        .select('*')
+        .limit(1);
+
+      if (error) {
+        console.error('❌ Supabase 연결 실패:', error);
+        Alert.alert('연결 실패', `Supabase 연결 실패: ${error.message}`);
+        return;
+      }
+
+      console.log('✅ Supabase 연결 성공');
+      Alert.alert('연결 성공', 'Supabase 연결이 정상입니다!');
+    } catch (error) {
+      console.error('❌ 연결 테스트 중 오류:', error);
+      Alert.alert('연결 오류', `연결 테스트 중 오류: ${error}`);
+    }
+  };
+
+  // 디버깅용: 전체 루틴 데이터 조회
+  const debugViewAllRoutines = async () => {
+    try {
+      console.log('🔍 디버깅: 전체 루틴 데이터 조회 중...');
+      const { data: allRoutines, error } = await supabase
+        .from('routines')
+        .select('*');
+
+      if (error) {
+        console.error('❌ 전체 루틴 조회 실패:', error);
+        Alert.alert('디버깅 오류', `전체 루틴 조회 실패: ${error.message}`);
+        return;
+      }
+
+      console.log('📊 전체 루틴 데이터:', allRoutines);
+      console.log('📊 루틴 개수:', allRoutines?.length || 0);
+      
+      // 각 루틴의 상세 정보를 Alert로 표시
+      const routineInfo = allRoutines?.map((r: any, index: number) => 
+        `${index + 1}. ${r.name}\n   목표: ${r.goal}\n   빈도: ${r.frequency}\n   난이도: ${r.difficulty}`
+      ).join('\n\n') || '데이터 없음';
+
+      Alert.alert(
+        '전체 루틴 데이터',
+        `총 ${allRoutines?.length || 0}개의 루틴이 있습니다:\n\n${routineInfo}`,
+        [{ text: '확인' }]
+      );
+    } catch (error) {
+      console.error('❌ 디버깅 중 오류:', error);
+      Alert.alert('디버깅 오류', `디버깅 중 오류가 발생했습니다: ${error}`);
+    }
+  };
+
+  // 디버깅용: 특정 조건으로 루틴 조회 테스트
+  const debugTestSpecificQuery = async () => {
+    try {
+      console.log('🔍 디버깅: 특정 조건으로 루틴 조회 테스트...');
+      
+      // 테스트할 조건들
+      const testConditions = [
+        { goal: 'Muscle Gain', frequency: '2 days/week', difficulty: 'beginner' },
+        { goal: 'Muscle Gain', frequency: '3 days/week', difficulty: 'beginner' },
+        { goal: 'Fat Loss', frequency: '3 days/week', difficulty: 'beginner' },
+        { goal: 'Fat Loss', frequency: '4 days/week', difficulty: 'beginner' },
+        { goal: 'General Fitness', frequency: '2 days/week', difficulty: 'beginner' },
+        { goal: 'General Fitness', frequency: '3 days/week', difficulty: 'beginner' },
+      ];
+
+      let results = '';
+      
+      for (const condition of testConditions) {
+        console.log(`🔍 조건 테스트:`, condition);
+        
+        const { data, error } = await supabase
+          .from('routines')
+          .select('*')
+          .eq('goal', condition.goal)
+          .eq('frequency', condition.frequency)
+          .eq('difficulty', condition.difficulty);
+
+        if (error) {
+          console.error(`❌ 조건 ${JSON.stringify(condition)} 조회 실패:`, error);
+          results += `❌ ${condition.goal} + ${condition.frequency} + ${condition.difficulty}: 실패\n`;
+        } else {
+          console.log(`✅ 조건 ${JSON.stringify(condition)} 조회 성공:`, data);
+          results += `✅ ${condition.goal} + ${condition.frequency} + ${condition.difficulty}: ${data?.length || 0}개\n`;
+        }
+      }
+
+      Alert.alert(
+        '조건별 루틴 조회 테스트',
+        results,
+        [{ text: '확인' }]
+      );
+    } catch (error) {
+      console.error('❌ 조건 테스트 중 오류:', error);
+      Alert.alert('디버깅 오류', `조건 테스트 중 오류가 발생했습니다: ${error}`);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
@@ -100,6 +207,32 @@ const GoalSelectionScreen: React.FC<GoalSelectionScreenProps> = ({ route }) => {
         </View>
 
         <View style={styles.footer}>
+          {/* 디버깅 버튼들 (개발 모드에서만 표시) */}
+          {__DEV__ && (
+            <>
+              <TouchableOpacity
+                style={styles.debugButton}
+                onPress={debugTestConnection}
+                activeOpacity={0.7}>
+                <Text style={styles.debugButtonText}>🔌 Supabase 연결 테스트</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={styles.debugButton}
+                onPress={debugViewAllRoutines}
+                activeOpacity={0.7}>
+                <Text style={styles.debugButtonText}>🔍 전체 루틴 데이터 확인</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.debugButton}
+                onPress={debugTestSpecificQuery}
+                activeOpacity={0.7}>
+                <Text style={styles.debugButtonText}>🧪 조건별 루틴 조회 테스트</Text>
+              </TouchableOpacity>
+            </>
+          )}
+          
           <TouchableOpacity
             style={[
               styles.nextButton,
@@ -202,6 +335,18 @@ const styles = StyleSheet.create({
   },
   footer: {
     paddingVertical: 20,
+  },
+  debugButton: {
+    backgroundColor: '#FF9500',
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  debugButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
   },
   nextButton: {
     backgroundColor: '#007AFF',

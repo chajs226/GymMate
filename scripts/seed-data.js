@@ -166,6 +166,13 @@ const routines = [
     difficulty: 'beginner'
   },
   {
+    name: 'Beginner Strength 2-Day Split',
+    description: '초보자를 위한 2일 분할 근력 운동 루틴',
+    goal: 'Muscle Gain',
+    frequency: '2 days/week',
+    difficulty: 'beginner'
+  },
+  {
     name: 'Beginner Fat Loss 4-Day Split',
     description: '초보자를 위한 4일 분할 지방 감소 루틴',
     goal: 'Fat Loss',
@@ -173,10 +180,24 @@ const routines = [
     difficulty: 'beginner'
   },
   {
+    name: 'Beginner Fat Loss 3-Day Split',
+    description: '초보자를 위한 3일 분할 지방 감소 루틴',
+    goal: 'Fat Loss',
+    frequency: '3 days/week',
+    difficulty: 'beginner'
+  },
+  {
     name: 'Beginner General Fitness 2-Day Split',
     description: '초보자를 위한 2일 분할 전신 운동 루틴',
     goal: 'General Fitness',
     frequency: '2 days/week',
+    difficulty: 'beginner'
+  },
+  {
+    name: 'Beginner General Fitness 3-Day Split',
+    description: '초보자를 위한 3일 분할 전신 운동 루틴',
+    goal: 'General Fitness',
+    frequency: '3 days/week',
     difficulty: 'beginner'
   }
 ];
@@ -237,7 +258,56 @@ const routineExercises = [
   { routine_name: 'Beginner General Fitness 2-Day Split', day: 2, exercise_name: 'Squats', sets: 3, reps: '10-12', rest_time: 120, order_index: 1 },
   { routine_name: 'Beginner General Fitness 2-Day Split', day: 2, exercise_name: 'Leg Press', sets: 3, reps: '10-12', rest_time: 120, order_index: 2 },
   { routine_name: 'Beginner General Fitness 2-Day Split', day: 2, exercise_name: 'Lunges', sets: 3, reps: '10-12 each', rest_time: 90, order_index: 3 },
-  { routine_name: 'Beginner General Fitness 2-Day Split', day: 2, exercise_name: 'Lateral Raises', sets: 2, reps: '10-12', rest_time: 60, order_index: 4 }
+  { routine_name: 'Beginner General Fitness 2-Day Split', day: 2, exercise_name: 'Lateral Raises', sets: 2, reps: '10-12', rest_time: 60, order_index: 4 },
+
+  // Beginner Strength 2-Day Split
+  // Day 1: Upper Body
+  { routine_name: 'Beginner Strength 2-Day Split', day: 1, exercise_name: 'Barbell Bench Press', sets: 4, reps: '8-10', rest_time: 120, order_index: 1 },
+  { routine_name: 'Beginner Strength 2-Day Split', day: 1, exercise_name: 'Lat Pulldown', sets: 4, reps: '8-10', rest_time: 120, order_index: 2 },
+  { routine_name: 'Beginner Strength 2-Day Split', day: 1, exercise_name: 'Overhead Press', sets: 3, reps: '8-10', rest_time: 90, order_index: 3 },
+  { routine_name: 'Beginner Strength 2-Day Split', day: 1, exercise_name: 'Bicep Curls', sets: 3, reps: '10-12', rest_time: 60, order_index: 4 },
+  { routine_name: 'Beginner Strength 2-Day Split', day: 1, exercise_name: 'Tricep Dips', sets: 3, reps: '8-12', rest_time: 60, order_index: 5 },
+
+  // Day 2: Lower Body
+  { routine_name: 'Beginner Strength 2-Day Split', day: 2, exercise_name: 'Squats', sets: 4, reps: '8-10', rest_time: 150, order_index: 1 },
+  { routine_name: 'Beginner Strength 2-Day Split', day: 2, exercise_name: 'Leg Press', sets: 3, reps: '10-12', rest_time: 120, order_index: 2 },
+  { routine_name: 'Beginner Strength 2-Day Split', day: 2, exercise_name: 'Lunges', sets: 3, reps: '10-12 each', rest_time: 90, order_index: 3 },
+  { routine_name: 'Beginner Strength 2-Day Split', day: 2, exercise_name: 'Lateral Raises', sets: 3, reps: '10-12', rest_time: 60, order_index: 4 },
+
+  // Beginner Fat Loss 3-Day Split
+  // Day 1: Upper Body
+  { routine_name: 'Beginner Fat Loss 3-Day Split', day: 1, exercise_name: 'Barbell Bench Press', sets: 3, reps: '12-15', rest_time: 60, order_index: 1 },
+  { routine_name: 'Beginner Fat Loss 3-Day Split', day: 1, exercise_name: 'Lat Pulldown', sets: 3, reps: '12-15', rest_time: 60, order_index: 2 },
+  { routine_name: 'Beginner Fat Loss 3-Day Split', day: 1, exercise_name: 'Overhead Press', sets: 3, reps: '12-15', rest_time: 60, order_index: 3 },
+  { routine_name: 'Beginner Fat Loss 3-Day Split', day: 1, exercise_name: 'Bicep Curls', sets: 3, reps: '12-15', rest_time: 45, order_index: 4 },
+
+  // Day 2: Lower Body
+  { routine_name: 'Beginner Fat Loss 3-Day Split', day: 2, exercise_name: 'Squats', sets: 3, reps: '12-15', rest_time: 90, order_index: 1 },
+  { routine_name: 'Beginner Fat Loss 3-Day Split', day: 2, exercise_name: 'Leg Press', sets: 3, reps: '12-15', rest_time: 90, order_index: 2 },
+  { routine_name: 'Beginner Fat Loss 3-Day Split', day: 2, exercise_name: 'Lunges', sets: 3, reps: '12-15 each', rest_time: 60, order_index: 3 },
+
+  // Day 3: Full Body
+  { routine_name: 'Beginner Fat Loss 3-Day Split', day: 3, exercise_name: 'Push-ups', sets: 3, reps: '15-20', rest_time: 45, order_index: 1 },
+  { routine_name: 'Beginner Fat Loss 3-Day Split', day: 3, exercise_name: 'Dumbbell Bench Press', sets: 3, reps: '12-15', rest_time: 60, order_index: 2 },
+  { routine_name: 'Beginner Fat Loss 3-Day Split', day: 3, exercise_name: 'Seated Cable Row', sets: 3, reps: '12-15', rest_time: 60, order_index: 3 },
+
+  // Beginner General Fitness 3-Day Split
+  // Day 1: Upper Body
+  { routine_name: 'Beginner General Fitness 3-Day Split', day: 1, exercise_name: 'Barbell Bench Press', sets: 3, reps: '10-12', rest_time: 90, order_index: 1 },
+  { routine_name: 'Beginner General Fitness 3-Day Split', day: 1, exercise_name: 'Lat Pulldown', sets: 3, reps: '10-12', rest_time: 90, order_index: 2 },
+  { routine_name: 'Beginner General Fitness 3-Day Split', day: 1, exercise_name: 'Overhead Press', sets: 3, reps: '10-12', rest_time: 90, order_index: 3 },
+  { routine_name: 'Beginner General Fitness 3-Day Split', day: 1, exercise_name: 'Bicep Curls', sets: 2, reps: '10-12', rest_time: 60, order_index: 4 },
+
+  // Day 2: Lower Body
+  { routine_name: 'Beginner General Fitness 3-Day Split', day: 2, exercise_name: 'Squats', sets: 3, reps: '10-12', rest_time: 120, order_index: 1 },
+  { routine_name: 'Beginner General Fitness 3-Day Split', day: 2, exercise_name: 'Leg Press', sets: 3, reps: '10-12', rest_time: 120, order_index: 2 },
+  { routine_name: 'Beginner General Fitness 3-Day Split', day: 2, exercise_name: 'Lunges', sets: 3, reps: '10-12 each', rest_time: 90, order_index: 3 },
+
+  // Day 3: Full Body
+  { routine_name: 'Beginner General Fitness 3-Day Split', day: 3, exercise_name: 'Dumbbell Bench Press', sets: 3, reps: '10-12', rest_time: 90, order_index: 1 },
+  { routine_name: 'Beginner General Fitness 3-Day Split', day: 3, exercise_name: 'Seated Cable Row', sets: 3, reps: '10-12', rest_time: 90, order_index: 2 },
+  { routine_name: 'Beginner General Fitness 3-Day Split', day: 3, exercise_name: 'Lateral Raises', sets: 3, reps: '10-12', rest_time: 60, order_index: 3 },
+  { routine_name: 'Beginner General Fitness 3-Day Split', day: 3, exercise_name: 'Tricep Dips', sets: 2, reps: '10-12', rest_time: 60, order_index: 4 }
 ];
 
 // 대체 운동 관계

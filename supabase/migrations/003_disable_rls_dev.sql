@@ -1,0 +1,8 @@
+-- 개발 중 RLS 비활성화 (나중에 다시 활성화 필요)
+-- 생성일: 2025-01-27
+
+-- RLS 비활성화
+ALTER TABLE exercises DISABLE ROW LEVEL SECURITY;
+ALTER TABLE alternative_exercises DISABLE ROW LEVEL SECURITY;
+ALTER TABLE routines DISABLE ROW LEVEL SECURITY;
+ALTER TABLE routine_exercises DISABLE ROW LEVEL SECURITY;

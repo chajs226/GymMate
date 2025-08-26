@@ -12,6 +12,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useOnboarding } from '../../contexts/OnboardingContext';
 import { DatabaseService } from '../../services/database';
 import { Routine } from '../../types/database';
+import { supabase } from '../../config/supabase';
 
 interface RoutineConfirmationScreenProps {
   route: {
@@ -61,6 +62,39 @@ const RoutineConfirmationScreen: React.FC<RoutineConfirmationScreenProps> = ({
       Alert.alert('오류', '루틴을 불러오는데 실패했습니다.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // 디버깅용: 전체 루틴 데이터 조회
+  const debugViewAllRoutines = async () => {
+    try {
+      console.log('🔍 디버깅: 전체 루틴 데이터 조회 중...');
+      const { data: allRoutines, error } = await supabase
+        .from('routines')
+        .select('*');
+
+      if (error) {
+        console.error('❌ 전체 루틴 조회 실패:', error);
+        Alert.alert('디버깅 오류', `전체 루틴 조회 실패: ${error.message}`);
+        return;
+      }
+
+      console.log('📊 전체 루틴 데이터:', allRoutines);
+      console.log('📊 루틴 개수:', allRoutines?.length || 0);
+      
+      // 각 루틴의 상세 정보를 Alert로 표시
+      const routineInfo = allRoutines?.map((r: any, index: number) => 
+        `${index + 1}. ${r.name}\n   목표: ${r.goal}\n   빈도: ${r.frequency}\n   난이도: ${r.difficulty}`
+      ).join('\n\n') || '데이터 없음';
+
+      Alert.alert(
+        '전체 루틴 데이터',
+        `총 ${allRoutines?.length || 0}개의 루틴이 있습니다:\n\n${routineInfo}`,
+        [{ text: '확인' }]
+      );
+    } catch (error) {
+      console.error('❌ 디버깅 중 오류:', error);
+      Alert.alert('디버깅 오류', `디버깅 중 오류가 발생했습니다: ${error}`);
     }
   };
 
@@ -238,6 +272,16 @@ const RoutineConfirmationScreen: React.FC<RoutineConfirmationScreenProps> = ({
         </View>
 
         <View style={styles.footer}>
+          {/* 디버깅 버튼 (개발 모드에서만 표시) */}
+          {__DEV__ && (
+            <TouchableOpacity
+              style={styles.debugButton}
+              onPress={debugViewAllRoutines}
+              activeOpacity={0.7}>
+              <Text style={styles.debugButtonText}>🔍 전체 루틴 데이터 확인</Text>
+            </TouchableOpacity>
+          )}
+          
           <TouchableOpacity
             style={[styles.completeButton, saving && styles.disabledButton]}
             onPress={handleComplete}
@@ -424,6 +468,18 @@ const styles = StyleSheet.create({
   },
   footer: {
     paddingVertical: 20,
+  },
+  debugButton: {
+    backgroundColor: '#FF9500',
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  debugButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
   },
   completeButton: {
     backgroundColor: '#34C759',

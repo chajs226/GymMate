@@ -323,28 +323,72 @@ export class DatabaseService {
       console.log('🌐 Supabase에서 루틴 조회 중...');
       console.log(`   목표: ${goal}, 빈도: ${frequency}`);
       
+      // 먼저 모든 루틴을 조회해서 데이터가 있는지 확인
+      const { data: allRoutines, error: allError } = await supabase
+        .from('routines')
+        .select('*');
+
+      if (allError) {
+        console.error('❌ 전체 루틴 조회 실패:', allError);
+        throw new Error(`루틴 조회 실패: ${allError.message}`);
+      }
+
+      console.log('📊 전체 루틴 데이터:', allRoutines);
+      console.log('📊 루틴 개수:', allRoutines?.length || 0);
+
+      // 데이터가 없으면 시드 데이터 생성 제안
+      if (!allRoutines || allRoutines.length === 0) {
+        console.log('⚠️ 데이터베이스에 루틴 데이터가 없습니다. 시드 데이터를 실행해주세요.');
+        throw new Error('데이터베이스에 루틴 데이터가 없습니다. 시드 데이터를 먼저 생성해주세요.');
+      }
+      
+      // 조건에 맞는 루틴 조회 - .single() 대신 배열로 조회
       const { data, error } = await supabase
         .from('routines')
         .select('*')
         .eq('goal', goal)
         .eq('frequency', frequency)
         .eq('difficulty', 'beginner')
-        .single();
+        .limit(1);
 
       if (error) {
-        console.error('❌ Supabase 루틴 조회 실패:', error);
+        console.error('❌ 조건부 루틴 조회 실패:', error);
+        console.error('   조회 조건:', { goal, frequency, difficulty: 'beginner' });
         throw new Error(`루틴 매핑 실패: ${error.message}`);
       }
 
-      console.log('✅ 루틴 조회 성공:', data);
-      return data;
+      // 결과가 없는 경우 처리
+      if (!data || data.length === 0) {
+        console.log('⚠️ 조건에 맞는 루틴이 없습니다.');
+        console.log('   사용 가능한 루틴들:', allRoutines.map(r => ({
+          goal: r.goal,
+          frequency: r.frequency,
+          difficulty: r.difficulty
+        })));
+        
+        // 대안: 같은 목표의 다른 빈도 루틴 찾기
+        const { data: alternativeData, error: altError } = await supabase
+          .from('routines')
+          .select('*')
+          .eq('goal', goal)
+          .eq('difficulty', 'beginner')
+          .limit(1);
+
+        if (altError || !alternativeData || alternativeData.length === 0) {
+          throw new Error(`조건에 맞는 루틴을 찾을 수 없습니다. 목표: ${goal}, 빈도: ${frequency}`);
+        }
+
+        console.log('✅ 대안 루틴 조회 성공:', alternativeData[0]);
+        return alternativeData[0];
+      }
+
+      console.log('✅ 루틴 조회 성공:', data[0]);
+      return data[0];
     } catch (error) {
       console.error('❌ 루틴 조회 중 예외 발생:', error);
       throw error;
     }
-  }
-
-  // 오늘의 운동 조회 (사용자 ID와 요일 기반)
+  }  // 오늘의 운동 조회 (사용자 ID와 요일 기반)
   static async getTodaysWorkout(userId: string, dayOfWeek: number) {
     // 사용자의 할당된 루틴 조회
     const userRoutine = await this.getUserRoutine(userId);
