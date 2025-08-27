@@ -5,6 +5,7 @@ import {createStackNavigator} from '@react-navigation/stack';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
 import { OnboardingProvider, useOnboarding } from './src/contexts/OnboardingContext';
 import OnboardingNavigator from './src/navigation/OnboardingNavigator';
+import TodaysWorkoutScreen from './src/screens/TodaysWorkoutScreen';
 
 
 
@@ -73,9 +74,9 @@ const TabNavigator = () => (
     }}>
     <Tab.Screen
       name="Home"
-      component={HomeScreen}
+      component={TodaysWorkoutScreen}
       options={{
-        tabBarLabel: '홈',
+        tabBarLabel: '오늘의 운동',
         tabBarIcon: HomeIcon,
       }}
     />

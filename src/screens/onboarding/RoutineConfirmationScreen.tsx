@@ -11,6 +11,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { useOnboarding } from '../../contexts/OnboardingContext';
 import { DatabaseService } from '../../services/database';
+import { UserService } from '../../services/UserService';
 import { Routine } from '../../types/database';
 import { supabase } from '../../config/supabase';
 
@@ -104,18 +105,18 @@ const RoutineConfirmationScreen: React.FC<RoutineConfirmationScreenProps> = ({
     try {
       setSaving(true);
       
-      // 임시 사용자 ID (실제로는 인증 시스템에서 가져와야 함)
-      const tempUserId = 'temp-user-' + Date.now();
+      // 사용자 ID 가져오기 (없으면 새로 생성)
+      const userId = await UserService.getCurrentUserId();
       
       // 사용자 프로필 생성
       await DatabaseService.createUserProfile({
-        user_id: tempUserId,
+        user_id: userId,
         goal: goal as any,
         frequency: frequency as any,
       });
 
       // 루틴 할당
-      await DatabaseService.assignRoutineToUser(tempUserId, routine.id);
+      await DatabaseService.assignRoutineToUser(userId, routine.id);
 
       // 온보딩 완료 처리
       setOnboardingComplete(true);

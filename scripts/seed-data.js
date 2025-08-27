@@ -1,19 +1,17 @@
 require('dotenv').config();
 const { createClient } = require('@supabase/supabase-js');
 
-// 환경 변수에서 Supabase 설정 가져오기
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+// Supabase 설정 (환경변수가 없을 때 기본값 사용)
+const supabaseUrl = process.env.SUPABASE_URL || 'https://raicdihqaxzpmqmpjtsf.supabase.co';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhaWNkaWhxYXh6cG1xbXBqdHNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwMzYyMTksImV4cCI6MjA3MTYxMjIxOX0.8-E7z7e-dJ5wQgXUkTo5C-itBZU7fVPWuxbb33altKY';
 
 if (!supabaseUrl || !supabaseServiceKey) {
-  console.error('❌ 환경 변수가 설정되지 않았습니다.');
-  console.error('📝 .env 파일을 확인하고 다음 변수들을 설정하세요:');
-  console.error('   - SUPABASE_URL');
-  console.error('   - SUPABASE_SERVICE_ROLE_KEY');
-  console.error('');
-  console.error('🔗 Supabase 대시보드 → Settings → API에서 값을 확인할 수 있습니다.');
+  console.error('❌ Supabase 설정이 없습니다.');
   process.exit(1);
 }
+
+console.log('🔗 Supabase URL:', supabaseUrl);
+console.log('🔑 Service Key 길이:', supabaseServiceKey.length);
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 

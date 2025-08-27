@@ -62,19 +62,38 @@ export class DatabaseService {
   }) {
     try {
       console.log('🌐 Supabase에 프로필 생성 중...');
+      console.log('   프로필 데이터:', {
+        user_id: profile.user_id,
+        goal: profile.goal,
+        frequency: profile.frequency
+      });
+      
+      // FK 제약조건이 제거되었으므로 임시 UUID로도 삽입 가능
       const { data, error } = await supabase
         .from('user_profiles')
         .insert(profile)
-        .select()
-        .single();
+        .select();
 
       if (error) {
         console.error('❌ 프로필 생성 실패:', error);
+        console.error('   오류 코드:', error.code);
+        console.error('   오류 메시지:', error.message);
+        console.error('   오류 세부사항:', error.details);
+        
+        // FK 오류인 경우 안내
+        if (error.code === '23503') {
+          throw new Error(`Foreign Key 제약조건 오류: Supabase 대시보드에서 FK 제약조건을 제거해주세요. (${error.message})`);
+        }
+        
         throw new Error(`사용자 프로필 생성 실패: ${error.message}`);
       }
 
-      console.log('✅ 프로필 생성 성공:', data);
-      return data;
+      if (!data || data.length === 0) {
+        throw new Error('프로필이 생성되었지만 데이터를 반환받지 못했습니다.');
+      }
+
+      console.log('✅ 프로필 생성 성공:', data[0]);
+      return data[0];
     } catch (error) {
       console.error('❌ 프로필 생성 중 예외 발생:', error);
       throw error;
@@ -264,6 +283,10 @@ export class DatabaseService {
       .single();
 
     if (error) {
+      // 사용자 루틴이 없는 경우는 에러가 아닌 null 반환
+      if (error.code === 'PGRST116') {
+        return null;
+      }
       throw new Error(`사용자 루틴 조회 실패: ${error.message}`);
     }
 
