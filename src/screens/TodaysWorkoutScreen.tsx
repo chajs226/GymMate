@@ -12,6 +12,8 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { DatabaseService } from '../services/database';
 import { UserService } from '../services/UserService';
+import { WorkoutStateService, WorkoutSession } from '../services/WorkoutStateService';
+import { SyncService } from '../services/SyncService';
 import { RoutineExercise, Exercise } from '../types/database';
 
 interface ExerciseCardProps {
@@ -61,7 +63,7 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({
 const TodaysWorkoutScreen: React.FC = () => {
   const navigation = useNavigation();
   const [exercises, setExercises] = useState<(RoutineExercise & { exercises: Exercise })[]>([]);
-  const [completedExercises, setCompletedExercises] = useState<Set<string>>(new Set());
+  const [currentSession, setCurrentSession] = useState<WorkoutSession | null>(null);
   const [loading, setLoading] = useState(true);
   const [workoutTitle, setWorkoutTitle] = useState('');
   const [userRoutineId, setUserRoutineId] = useState<string | null>(null);
@@ -76,6 +78,11 @@ const TodaysWorkoutScreen: React.FC = () => {
   const loadTodaysWorkout = async () => {
     try {
       setLoading(true);
+      
+      // 자동 동기화 실행 (백그라운드)
+      SyncService.setupAutoSync().catch(error => {
+        console.warn('⚠️ 자동 동기화 실패 (무시됨):', error);
+      });
       
       // 사용자 ID 가져오기
       const userId = await UserService.getCurrentUserId();
@@ -103,6 +110,14 @@ const TodaysWorkoutScreen: React.FC = () => {
           );
           
           setExercises(routineExercises);
+          
+          // 운동 세션 로드/생성
+          const session = await WorkoutStateService.getCurrentSession(
+            userId,
+            routines[0].id,
+            currentDay
+          );
+          setCurrentSession(session);
         } else {
           Alert.alert('오류', '사용 가능한 루틴이 없습니다.');
         }
@@ -117,6 +132,14 @@ const TodaysWorkoutScreen: React.FC = () => {
         );
         
         setExercises(routineExercises);
+        
+        // 운동 세션 로드/생성
+        const session = await WorkoutStateService.getCurrentSession(
+          userId,
+          userRoutine.routine_id,
+          currentDay
+        );
+        setCurrentSession(session);
       }
       
       console.log('✅ 오늘의 운동 로드 완료');
@@ -133,16 +156,43 @@ const TodaysWorkoutScreen: React.FC = () => {
     return days[dayOfWeek - 1];
   };
 
-  const toggleExerciseComplete = (exerciseId: string) => {
-    setCompletedExercises(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(exerciseId)) {
-        newSet.delete(exerciseId);
-      } else {
-        newSet.add(exerciseId);
+  const toggleExerciseComplete = async (exerciseId: string) => {
+    if (!currentSession) {
+      console.warn('⚠️ 현재 세션이 없어서 운동 완료 상태를 변경할 수 없습니다.');
+      return;
+    }
+
+    try {
+      // 운동 완료 상태 토글
+      const updatedSession = await WorkoutStateService.toggleExerciseCompletion(
+        currentSession,
+        exerciseId
+      );
+      
+      setCurrentSession(updatedSession);
+      
+      // 모든 운동이 완료되었는지 확인
+      const completedSession = await WorkoutStateService.completeSessionIfAllDone(
+        updatedSession,
+        exercises.length
+      );
+      
+      if (completedSession.isCompleted && !currentSession.isCompleted) {
+        setCurrentSession(completedSession);
+        
+        // 완료 축하 메시지 표시
+        setTimeout(() => {
+          Alert.alert(
+            '운동 완료! 🎉',
+            '오늘의 모든 운동을 완료했습니다!\n훌륭한 운동이었어요!',
+            [{ text: '확인', style: 'default' }]
+          );
+        }, 100);
       }
-      return newSet;
-    });
+    } catch (error) {
+      console.error('❌ 운동 완료 상태 변경 실패:', error);
+      Alert.alert('오류', '운동 완료 상태를 변경하는데 실패했습니다.');
+    }
   };
 
   const handleExercisePress = (exercise: RoutineExercise & { exercises: Exercise }) => {
@@ -155,7 +205,7 @@ const TodaysWorkoutScreen: React.FC = () => {
 
   const getCompletionProgress = () => {
     const total = exercises.length;
-    const completed = completedExercises.size;
+    const completed = currentSession ? currentSession.completedExercises.size : 0;
     return { total, completed, percentage: total > 0 ? (completed / total) * 100 : 0 };
   };
 
@@ -163,17 +213,8 @@ const TodaysWorkoutScreen: React.FC = () => {
     loadTodaysWorkout();
   }, []);
 
-  // 모든 운동이 완료되었을 때의 처리
-  useEffect(() => {
-    const { total, completed } = getCompletionProgress();
-    if (total > 0 && completed === total) {
-      Alert.alert(
-        '운동 완료! 🎉',
-        '오늘의 모든 운동을 완료했습니다!\n훌륭한 운동이었어요!',
-        [{ text: '확인', style: 'default' }]
-      );
-    }
-  }, [completedExercises, exercises]);
+  // 세션 완료 상태 모니터링 (중복 Alert 방지를 위해 제거)
+  // toggleExerciseComplete에서 직접 처리함
 
   if (loading) {
     return (
@@ -216,7 +257,7 @@ const TodaysWorkoutScreen: React.FC = () => {
           renderItem={({ item }) => (
             <ExerciseCard
               exercise={item}
-              isCompleted={completedExercises.has(item.exercise_id)}
+              isCompleted={currentSession ? currentSession.completedExercises.has(item.exercise_id) : false}
               onToggleComplete={() => toggleExerciseComplete(item.exercise_id)}
               onExercisePress={() => handleExercisePress(item)}
             />
@@ -228,13 +269,66 @@ const TodaysWorkoutScreen: React.FC = () => {
 
       {/* 디버깅 버튼 (개발 모드에서만 표시) */}
       {__DEV__ && (
-        <TouchableOpacity
-          style={styles.debugButton}
-          onPress={loadTodaysWorkout}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.debugButtonText}>🔄 운동 데이터 새로고침</Text>
-        </TouchableOpacity>
+        <View style={styles.debugContainer}>
+          <TouchableOpacity
+            style={styles.debugButton}
+            onPress={loadTodaysWorkout}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.debugButtonText}>🔄 운동 데이터 새로고침</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={styles.debugButton}
+            onPress={() => WorkoutStateService.debugPrintStorageState()}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.debugButtonText}>📱 스토리지 상태 출력</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={styles.debugButton}
+            onPress={async () => {
+              const result = await SyncService.performFullSync();
+              Alert.alert(
+                result.success ? '동기화 완료' : '동기화 실패',
+                result.message
+              );
+            }}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.debugButtonText}>☁️ 수동 동기화</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={styles.debugButton}
+            onPress={async () => {
+              const status = await SyncService.getSyncStatus();
+              Alert.alert(
+                '동기화 상태',
+                `온라인: ${status.isOnline ? '✅' : '❌'}\n` +
+                `마지막 동기화: ${status.lastSync ? new Date(status.lastSync).toLocaleString('ko-KR') : '없음'}\n` +
+                `대기 중인 업로드: ${status.pendingUploads}개`
+              );
+            }}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.debugButtonText}>📊 동기화 상태</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={[styles.debugButton, styles.dangerButton]}
+            onPress={async () => {
+              await WorkoutStateService.clearAllData();
+              await SyncService.clearSyncData();
+              Alert.alert('초기화 완료', '모든 운동 데이터가 삭제되었습니다.');
+              loadTodaysWorkout();
+            }}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.debugButtonText, styles.dangerText]}>🗑️ 데이터 초기화</Text>
+          </TouchableOpacity>
+        </View>
       )}
     </SafeAreaView>
   );
@@ -367,18 +461,28 @@ const styles = StyleSheet.create({
     color: '#8E8E93',
     textAlign: 'center',
   },
+  debugContainer: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+    gap: 8,
+  },
   debugButton: {
     backgroundColor: '#FF9500',
     borderRadius: 8,
     paddingVertical: 8,
     paddingHorizontal: 16,
-    margin: 20,
     alignItems: 'center',
   },
   debugButtonText: {
     color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '600',
+  },
+  dangerButton: {
+    backgroundColor: '#FF3B30',
+  },
+  dangerText: {
+    color: '#FFFFFF',
   },
 });
 

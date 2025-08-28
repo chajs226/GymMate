@@ -15,6 +15,8 @@ import {
 import { useNavigation, useRoute } from '@react-navigation/native';
 import Video from 'react-native-video';
 import { DatabaseService } from '../services/database';
+import { UserService } from '../services/UserService';
+import { WorkoutStateService } from '../services/WorkoutStateService';
 import { Exercise } from '../types/database';
 
 interface ExerciseDetailScreenProps {
@@ -40,6 +42,8 @@ const ExerciseDetailScreen: React.FC = () => {
   const [alternativeModalVisible, setAlternativeModalVisible] = useState(false);
   const [alternativeExercise, setAlternativeExercise] = useState<Exercise | null>(null);
   const [alternativeLoading, setAlternativeLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [recentLogs, setRecentLogs] = useState<any[]>([]);
 
   useEffect(() => {
     loadExerciseDetails();
@@ -53,7 +57,21 @@ const ExerciseDetailScreen: React.FC = () => {
       const exerciseData = await DatabaseService.getExerciseById(exerciseId);
       setExercise(exerciseData);
       
+      // 최근 성과 로그 불러오기
+      const userId = await UserService.getCurrentUserId();
+      const logs = await WorkoutStateService.getRecentPerformanceLogs(userId, exerciseId, 3);
+      setRecentLogs(logs);
+      
+      // 최근 로그가 있으면 기본값으로 설정
+      if (logs.length > 0) {
+        const lastLog = logs[0];
+        if (lastLog.weight) setWeight(lastLog.weight.toString());
+        if (lastLog.sets) setSets(lastLog.sets.toString());
+        if (lastLog.reps) setReps(lastLog.reps);
+      }
+      
       console.log('✅ 운동 상세 정보 로드 완료:', exerciseData);
+      console.log('📊 최근 성과 로그:', logs);
     } catch (error) {
       console.error('❌ 운동 상세 정보 로드 실패:', error);
       Alert.alert('오류', '운동 정보를 불러오는데 실패했습니다.');
@@ -123,19 +141,51 @@ const ExerciseDetailScreen: React.FC = () => {
         { text: '취소', style: 'cancel' },
         {
           text: '저장',
-          onPress: () => {
-            // TODO: 실제 로깅 로직 구현
-            console.log('💾 운동 기록 저장:', {
-              exerciseId,
-              weight: weightNum,
-              sets: setsNum,
-              reps: repsNum,
-            });
-            Alert.alert('완료', '운동 기록이 저장되었습니다!');
-            // 입력 필드 초기화
-            setWeight('');
-            setSets('');
-            setReps('');
+          onPress: async () => {
+            try {
+              setSaving(true);
+              
+              const userId = await UserService.getCurrentUserId();
+              
+              // 사용자의 현재 루틴 ID 가져오기
+              let routineId: string | null = null;
+              try {
+                const userRoutine = await DatabaseService.getUserRoutine(userId);
+                routineId = userRoutine?.routine_id || null;
+              } catch (error) {
+                console.warn('⚠️ 사용자 루틴 조회 실패, 기본값 사용:', error);
+              }
+              
+              // 성과 로그 저장
+              await WorkoutStateService.savePerformanceLog({
+                userId,
+                exerciseId,
+                routineId: routineId || undefined,
+                weight: weightNum,
+                sets: setsNum,
+                reps: reps,
+                notes: '',
+              });
+
+              // 최근 로그 새로고침
+              const updatedLogs = await WorkoutStateService.getRecentPerformanceLogs(userId, exerciseId, 3);
+              setRecentLogs(updatedLogs);
+
+              console.log('💾 운동 기록 저장 완료:', {
+                exerciseId,
+                weight: weightNum,
+                sets: setsNum,
+                reps: reps,
+              });
+
+              Alert.alert('완료', '운동 기록이 저장되었습니다! 🎉');
+              
+            } catch (error) {
+              console.error('❌ 운동 기록 저장 실패:', error);
+              Alert.alert('저장 실패', '운동 기록 저장에 실패했습니다.');
+            } finally {
+              setSaving(false);
+            }
           },
         },
       ]
@@ -285,6 +335,39 @@ const ExerciseDetailScreen: React.FC = () => {
           </View>
         </View>
 
+        {/* 최근 성과 로그 */}
+        {recentLogs.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>최근 기록</Text>
+            {recentLogs.map((log, index) => (
+              <View key={index} style={styles.logItem}>
+                <View style={styles.logHeader}>
+                  <Text style={styles.logDate}>
+                    {new Date(log.loggedAt).toLocaleDateString('ko-KR', {
+                      month: 'short',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </Text>
+                  {index === 0 && <Text style={styles.latestBadge}>최신</Text>}
+                </View>
+                <View style={styles.logData}>
+                  {log.weight && (
+                    <Text style={styles.logValue}>{log.weight}kg</Text>
+                  )}
+                  {log.sets && (
+                    <Text style={styles.logValue}>{log.sets}세트</Text>
+                  )}
+                  {log.reps && (
+                    <Text style={styles.logValue}>{log.reps}회</Text>
+                  )}
+                </View>
+              </View>
+            ))}
+          </View>
+        )}
+
         {/* 대체 운동 제안 버튼 */}
         <TouchableOpacity
           style={styles.alternativeButton}
@@ -336,10 +419,15 @@ const ExerciseDetailScreen: React.FC = () => {
           </View>
 
           <TouchableOpacity
-            style={styles.logButton}
+            style={[styles.logButton, saving && styles.logButtonDisabled]}
             onPress={handleLogWorkout}
+            disabled={saving}
             activeOpacity={0.7}>
-            <Text style={styles.logButtonText}>운동 기록 저장</Text>
+            {saving ? (
+              <ActivityIndicator size="small" color="#FFFFFF" />
+            ) : (
+              <Text style={styles.logButtonText}>운동 기록 저장</Text>
+            )}
           </TouchableOpacity>
         </View>
 
@@ -657,10 +745,55 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     alignItems: 'center',
   },
+  logButtonDisabled: {
+    backgroundColor: '#8E8E93',
+  },
   logButtonText: {
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
+  },
+  // 최근 성과 로그 스타일
+  logItem: {
+    backgroundColor: '#F2F2F7',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 8,
+  },
+  logHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  logDate: {
+    fontSize: 12,
+    color: '#8E8E93',
+    fontWeight: '500',
+  },
+  latestBadge: {
+    fontSize: 10,
+    color: '#34C759',
+    fontWeight: '600',
+    backgroundColor: '#E8F5E8',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  logData: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  logValue: {
+    fontSize: 14,
+    color: '#1C1C1E',
+    fontWeight: '500',
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    overflow: 'hidden',
   },
   bottomSpacing: {
     height: 40,
