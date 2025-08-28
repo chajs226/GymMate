@@ -355,36 +355,57 @@ const routineExercises = [
 
 // 대체 운동 관계
 const alternativeExerciseRelations = [
-  // Barbell Bench Press 대체 운동들
+  // 가슴 운동 대체 관계
   { exercise_name: 'Barbell Bench Press', alternative_name: 'Dumbbell Bench Press' },
   { exercise_name: 'Barbell Bench Press', alternative_name: 'Machine Chest Press' },
   { exercise_name: 'Barbell Bench Press', alternative_name: 'Push-ups' },
 
-  // Dumbbell Bench Press 대체 운동들
   { exercise_name: 'Dumbbell Bench Press', alternative_name: 'Barbell Bench Press' },
   { exercise_name: 'Dumbbell Bench Press', alternative_name: 'Machine Chest Press' },
   { exercise_name: 'Dumbbell Bench Press', alternative_name: 'Push-ups' },
 
-  // Machine Chest Press 대체 운동들
   { exercise_name: 'Machine Chest Press', alternative_name: 'Barbell Bench Press' },
   { exercise_name: 'Machine Chest Press', alternative_name: 'Dumbbell Bench Press' },
   { exercise_name: 'Machine Chest Press', alternative_name: 'Push-ups' },
 
-  // Lat Pulldown 대체 운동들
+  { exercise_name: 'Push-ups', alternative_name: 'Barbell Bench Press' },
+  { exercise_name: 'Push-ups', alternative_name: 'Dumbbell Bench Press' },
+  { exercise_name: 'Push-ups', alternative_name: 'Machine Chest Press' },
+
+  // 등 운동 대체 관계
   { exercise_name: 'Lat Pulldown', alternative_name: 'Seated Cable Row' },
   { exercise_name: 'Lat Pulldown', alternative_name: 'Dumbbell Row' },
 
-  // Seated Cable Row 대체 운동들
   { exercise_name: 'Seated Cable Row', alternative_name: 'Lat Pulldown' },
   { exercise_name: 'Seated Cable Row', alternative_name: 'Dumbbell Row' },
 
-  // Squats 대체 운동들
+  { exercise_name: 'Dumbbell Row', alternative_name: 'Lat Pulldown' },
+  { exercise_name: 'Dumbbell Row', alternative_name: 'Seated Cable Row' },
+
+  // 하체 운동 대체 관계
   { exercise_name: 'Squats', alternative_name: 'Leg Press' },
   { exercise_name: 'Squats', alternative_name: 'Lunges' },
 
-  // Leg Press 대체 운동들
   { exercise_name: 'Leg Press', alternative_name: 'Squats' },
-  { exercise_name: 'Leg Press', alternative_name: 'Lunges' }
+  { exercise_name: 'Leg Press', alternative_name: 'Lunges' },
+
+  { exercise_name: 'Lunges', alternative_name: 'Squats' },
+  { exercise_name: 'Lunges', alternative_name: 'Leg Press' },
+
+  // 어깨 운동 대체 관계
+  { exercise_name: 'Overhead Press', alternative_name: 'Lateral Raises' },
+  { exercise_name: 'Overhead Press', alternative_name: 'Push-ups' },
+
+  { exercise_name: 'Lateral Raises', alternative_name: 'Overhead Press' },
+  { exercise_name: 'Lateral Raises', alternative_name: 'Push-ups' },
+
+  // 팔 운동 대체 관계
+  { exercise_name: 'Bicep Curls', alternative_name: 'Dumbbell Row' },
+  { exercise_name: 'Bicep Curls', alternative_name: 'Lat Pulldown' },
+
+  { exercise_name: 'Tricep Dips', alternative_name: 'Push-ups' },
+  { exercise_name: 'Tricep Dips', alternative_name: 'Barbell Bench Press' },
+  { exercise_name: 'Tricep Dips', alternative_name: 'Dumbbell Bench Press' }
 ];
 
 async function seedData() {

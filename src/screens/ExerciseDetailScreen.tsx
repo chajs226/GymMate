@@ -9,6 +9,8 @@ import {
   Alert,
   ScrollView,
   ActivityIndicator,
+  Modal,
+  Image,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import Video from 'react-native-video';
@@ -35,6 +37,9 @@ const ExerciseDetailScreen: React.FC = () => {
   const [sets, setSets] = useState('');
   const [reps, setReps] = useState('');
   const [videoError, setVideoError] = useState(false);
+  const [alternativeModalVisible, setAlternativeModalVisible] = useState(false);
+  const [alternativeExercise, setAlternativeExercise] = useState<Exercise | null>(null);
+  const [alternativeLoading, setAlternativeLoading] = useState(false);
 
   useEffect(() => {
     loadExerciseDetails();
@@ -59,33 +64,40 @@ const ExerciseDetailScreen: React.FC = () => {
 
   const handleSuggestAlternative = async () => {
     try {
+      setAlternativeLoading(true);
+      setAlternativeModalVisible(true);
+      
       console.log('🔍 대체 운동 조회 중...');
       const alternative = await DatabaseService.getRandomAlternativeExercise(exerciseId);
       
       if (alternative) {
         console.log('✅ 대체 운동 발견:', alternative);
-        Alert.alert(
-          '대체 운동 제안',
-          `${alternative.name}은(는) 어떠세요?`,
-          [
-            { text: '취소', style: 'cancel' },
-            {
-              text: '상세보기',
-              onPress: () => {
-                navigation.navigate('ExerciseDetail', {
-                  exerciseId: alternative.id,
-                  exerciseName: alternative.name,
-                });
-              },
-            },
-          ]
-        );
+        setAlternativeExercise(alternative);
       } else {
-        Alert.alert('알림', '현재 이 운동에 대한 대체 운동이 없습니다.');
+        console.log('⚠️ 대체 운동이 없습니다.');
+        setAlternativeExercise(null);
       }
     } catch (error) {
       console.error('❌ 대체 운동 조회 실패:', error);
       Alert.alert('오류', '대체 운동을 찾는데 실패했습니다.');
+      setAlternativeModalVisible(false);
+    } finally {
+      setAlternativeLoading(false);
+    }
+  };
+
+  const handleAlternativeModalClose = () => {
+    setAlternativeModalVisible(false);
+    setAlternativeExercise(null);
+  };
+
+  const handleAlternativeExerciseSelect = () => {
+    if (alternativeExercise) {
+      setAlternativeModalVisible(false);
+      navigation.navigate('ExerciseDetail', {
+        exerciseId: alternativeExercise.id,
+        exerciseName: alternativeExercise.name,
+      });
     }
   };
 
@@ -334,6 +346,111 @@ const ExerciseDetailScreen: React.FC = () => {
         {/* 하단 여백 */}
         <View style={styles.bottomSpacing} />
       </ScrollView>
+
+      {/* 대체 운동 제안 Modal */}
+      <Modal
+        visible={alternativeModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={handleAlternativeModalClose}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>대체 운동 제안</Text>
+              <TouchableOpacity
+                style={styles.modalCloseButton}
+                onPress={handleAlternativeModalClose}>
+                <Text style={styles.modalCloseText}>✕</Text>
+              </TouchableOpacity>
+            </View>
+
+            {alternativeLoading ? (
+              <View style={styles.modalLoadingContainer}>
+                <ActivityIndicator size="large" color="#007AFF" />
+                <Text style={styles.modalLoadingText}>대체 운동을 찾는 중...</Text>
+              </View>
+            ) : alternativeExercise ? (
+              <View style={styles.modalBody}>
+                {/* 대체 운동 썸네일 */}
+                <View style={styles.modalThumbnailContainer}>
+                  {alternativeExercise.video_url ? (
+                    <Video
+                      source={{ uri: alternativeExercise.video_url }}
+                      style={styles.modalThumbnail}
+                      resizeMode="cover"
+                      repeat={true}
+                      muted={true}
+                      paused={false}
+                      controls={false}
+                    />
+                  ) : (
+                    <View style={styles.modalThumbnailPlaceholder}>
+                      <Text style={styles.modalThumbnailIcon}>💪</Text>
+                    </View>
+                  )}
+                </View>
+
+                {/* 대체 운동 정보 */}
+                <Text style={styles.modalExerciseName}>{alternativeExercise.name}</Text>
+                
+                {alternativeExercise.description && (
+                  <Text style={styles.modalExerciseDescription}>
+                    {alternativeExercise.description}
+                  </Text>
+                )}
+
+                {/* 대체 운동 상세 정보 */}
+                <View style={styles.modalExerciseInfo}>
+                  {alternativeExercise.equipment && (
+                    <View style={styles.modalInfoItem}>
+                      <Text style={styles.modalInfoLabel}>장비:</Text>
+                      <Text style={styles.modalInfoValue}>{alternativeExercise.equipment}</Text>
+                    </View>
+                  )}
+                  {alternativeExercise.difficulty && (
+                    <View style={styles.modalInfoItem}>
+                      <Text style={styles.modalInfoLabel}>난이도:</Text>
+                      <Text style={styles.modalInfoValue}>
+                        {alternativeExercise.difficulty === 'beginner' ? '초급' :
+                         alternativeExercise.difficulty === 'intermediate' ? '중급' : '고급'}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+
+                {/* 액션 버튼들 */}
+                <View style={styles.modalActions}>
+                  <TouchableOpacity
+                    style={styles.modalCancelButton}
+                    onPress={handleAlternativeModalClose}>
+                    <Text style={styles.modalCancelText}>취소</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.modalSelectButton}
+                    onPress={handleAlternativeExerciseSelect}>
+                    <Text style={styles.modalSelectText}>상세보기</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ) : (
+              <View style={styles.modalBody}>
+                <View style={styles.modalNoAlternativeContainer}>
+                  <Text style={styles.modalNoAlternativeIcon}>😔</Text>
+                  <Text style={styles.modalNoAlternativeTitle}>대체 운동이 없습니다</Text>
+                  <Text style={styles.modalNoAlternativeText}>
+                    현재 이 운동에 대한 대체 운동이 준비되지 않았습니다.
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  style={styles.modalCloseOnlyButton}
+                  onPress={handleAlternativeModalClose}>
+                  <Text style={styles.modalCloseOnlyText}>확인</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -547,6 +664,168 @@ const styles = StyleSheet.create({
   },
   bottomSpacing: {
     height: 40,
+  },
+  // Modal 스타일
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    marginHorizontal: 20,
+    maxWidth: 400,
+    width: '100%',
+    maxHeight: '80%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E5EA',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#1C1C1E',
+  },
+  modalCloseButton: {
+    padding: 4,
+  },
+  modalCloseText: {
+    fontSize: 20,
+    color: '#8E8E93',
+    fontWeight: '300',
+  },
+  modalLoadingContainer: {
+    padding: 40,
+    alignItems: 'center',
+  },
+  modalLoadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#8E8E93',
+  },
+  modalBody: {
+    padding: 20,
+  },
+  modalThumbnailContainer: {
+    width: '100%',
+    height: 120,
+    borderRadius: 8,
+    overflow: 'hidden',
+    backgroundColor: '#F2F2F7',
+    marginBottom: 16,
+  },
+  modalThumbnail: {
+    width: '100%',
+    height: '100%',
+  },
+  modalThumbnailPlaceholder: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F2F2F7',
+  },
+  modalThumbnailIcon: {
+    fontSize: 40,
+  },
+  modalExerciseName: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#1C1C1E',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  modalExerciseDescription: {
+    fontSize: 14,
+    color: '#8E8E93',
+    lineHeight: 20,
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  modalExerciseInfo: {
+    marginBottom: 20,
+  },
+  modalInfoItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 4,
+  },
+  modalInfoLabel: {
+    fontSize: 14,
+    color: '#8E8E93',
+  },
+  modalInfoValue: {
+    fontSize: 14,
+    color: '#1C1C1E',
+    fontWeight: '500',
+  },
+  modalActions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  modalCancelButton: {
+    flex: 1,
+    backgroundColor: '#F2F2F7',
+    borderRadius: 8,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  modalCancelText: {
+    fontSize: 16,
+    color: '#8E8E93',
+    fontWeight: '500',
+  },
+  modalSelectButton: {
+    flex: 1,
+    backgroundColor: '#007AFF',
+    borderRadius: 8,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  modalSelectText: {
+    fontSize: 16,
+    color: '#FFFFFF',
+    fontWeight: '500',
+  },
+  modalNoAlternativeContainer: {
+    alignItems: 'center',
+    paddingVertical: 20,
+  },
+  modalNoAlternativeIcon: {
+    fontSize: 48,
+    marginBottom: 16,
+  },
+  modalNoAlternativeTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#1C1C1E',
+    marginBottom: 8,
+  },
+  modalNoAlternativeText: {
+    fontSize: 14,
+    color: '#8E8E93',
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 20,
+  },
+  modalCloseOnlyButton: {
+    backgroundColor: '#007AFF',
+    borderRadius: 8,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  modalCloseOnlyText: {
+    fontSize: 16,
+    color: '#FFFFFF',
+    fontWeight: '500',
   },
 });
 
