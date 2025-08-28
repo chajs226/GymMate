@@ -58,24 +58,32 @@ export class DatabaseService {
   static async createUserProfile(profile: {
     user_id: string;
     goal: 'Muscle Gain' | 'Fat Loss' | 'General Fitness';
-    frequency: '2 days/week' | '3 days/week' | '4 days/week';
+    frequency: '2 days/week' | '3 days/week' | '4 days/week' | '7 days/week';
   }) {
     try {
-      console.log('🌐 Supabase에 프로필 생성 중...');
-      console.log('   프로필 데이터:', {
-        user_id: profile.user_id,
-        goal: profile.goal,
-        frequency: profile.frequency
+      console.log('🌐 Supabase에 프로필 생성/업데이트 중...', profile.user_id);
+      
+      // 7 days/week는 데이터베이스 제약조건 때문에 3 days/week로 저장
+      const dbProfile = {
+        ...profile,
+        frequency: profile.frequency === '7 days/week' ? '3 days/week' : profile.frequency
+      };
+      
+      console.log('🔄 프로필 데이터 변환:', {
+        원본: profile.frequency,
+        저장: dbProfile.frequency
       });
       
-      // FK 제약조건이 제거되었으므로 임시 UUID로도 삽입 가능
+      // upsert를 사용하여 중복 키 오류 방지
       const { data, error } = await supabase
         .from('user_profiles')
-        .insert(profile)
+        .upsert(dbProfile, {
+          onConflict: 'user_id'
+        })
         .select();
 
       if (error) {
-        console.error('❌ 프로필 생성 실패:', error);
+        console.error('❌ 프로필 upsert 실패:', error);
         console.error('   오류 코드:', error.code);
         console.error('   오류 메시지:', error.message);
         console.error('   오류 세부사항:', error.details);
@@ -85,17 +93,17 @@ export class DatabaseService {
           throw new Error(`Foreign Key 제약조건 오류: Supabase 대시보드에서 FK 제약조건을 제거해주세요. (${error.message})`);
         }
         
-        throw new Error(`사용자 프로필 생성 실패: ${error.message}`);
+        throw new Error(`사용자 프로필 생성/업데이트 실패: ${error.message}`);
       }
 
       if (!data || data.length === 0) {
-        throw new Error('프로필이 생성되었지만 데이터를 반환받지 못했습니다.');
+        throw new Error('프로필이 생성/업데이트되었지만 데이터를 반환받지 못했습니다.');
       }
 
-      console.log('✅ 프로필 생성 성공:', data[0]);
+      console.log('✅ 프로필 생성/업데이트 성공:', data[0]);
       return data[0];
     } catch (error) {
-      console.error('❌ 프로필 생성 중 예외 발생:', error);
+      console.error('❌ 프로필 생성/업데이트 중 예외 발생:', error);
       throw error;
     }
   }
@@ -249,20 +257,33 @@ export class DatabaseService {
 
   // 사용자 루틴 할당 관련 메서드
   static async assignRoutineToUser(userId: string, routineId: string) {
-    const { data, error } = await supabase
-      .from('user_routines')
-      .upsert({
-        user_id: userId,
-        routine_id: routineId
-      })
-      .select()
-      .single();
+    try {
+      console.log('🌐 사용자 루틴 할당/업데이트 중...', { userId, routineId });
+      
+      const { data, error } = await supabase
+        .from('user_routines')
+        .upsert({
+          user_id: userId,
+          routine_id: routineId
+        }, {
+          onConflict: 'user_id'
+        })
+        .select()
+        .single();
 
-    if (error) {
-      throw new Error(`루틴 할당 실패: ${error.message}`);
+      if (error) {
+        console.error('❌ 루틴 할당 실패:', error);
+        console.error('   오류 코드:', error.code);
+        console.error('   오류 메시지:', error.message);
+        throw new Error(`루틴 할당 실패: ${error.message}`);
+      }
+
+      console.log('✅ 루틴 할당/업데이트 성공:', data);
+      return data;
+    } catch (error) {
+      console.error('❌ 루틴 할당 중 예외 발생:', error);
+      throw error;
     }
-
-    return data;
   }
 
   static async getUserRoutine(userId: string) {
@@ -346,6 +367,23 @@ export class DatabaseService {
       console.log('🌐 Supabase에서 루틴 조회 중...');
       console.log(`   목표: ${goal}, 빈도: ${frequency}`);
       
+      // 7 days/week 요청시 특별 처리
+      if (frequency === '7 days/week') {
+        console.log('🔥 7일 매일 운동 루틴 조회 중...');
+        const { data: dailyRoutine, error: dailyError } = await supabase
+          .from('routines')
+          .select('*')
+          .eq('name', 'Daily Training Program')
+          .limit(1);
+
+        if (dailyError) {
+          console.error('❌ 7일 루틴 조회 실패:', dailyError);
+        } else if (dailyRoutine && dailyRoutine.length > 0) {
+          console.log('✅ 7일 매일 운동 루틴 발견:', dailyRoutine[0]);
+          return dailyRoutine[0];
+        }
+      }
+      
       // 먼저 모든 루틴을 조회해서 데이터가 있는지 확인
       const { data: allRoutines, error: allError } = await supabase
         .from('routines')
@@ -389,16 +427,38 @@ export class DatabaseService {
           difficulty: r.difficulty
         })));
         
-        // 대안: 같은 목표의 다른 빈도 루틴 찾기
-        const { data: alternativeData, error: altError } = await supabase
-          .from('routines')
-          .select('*')
-          .eq('goal', goal)
-          .eq('difficulty', 'beginner')
-          .limit(1);
+        // 대안: 같은 목표의 다른 빈도 루틴 찾기 또는 Daily Training Program 사용
+        let alternativeData = null;
+        let altError = null;
 
+        // 7 days/week가 아닌 경우 같은 목표의 다른 빈도 루틴 찾기
+        if (frequency !== '7 days/week') {
+          const result = await supabase
+            .from('routines')
+            .select('*')
+            .eq('goal', goal)
+            .eq('difficulty', 'beginner')
+            .limit(1);
+          
+          alternativeData = result.data;
+          altError = result.error;
+        }
+
+        // 대안이 없으면 Daily Training Program 사용
         if (altError || !alternativeData || alternativeData.length === 0) {
-          throw new Error(`조건에 맞는 루틴을 찾을 수 없습니다. 목표: ${goal}, 빈도: ${frequency}`);
+          console.log('🔄 Daily Training Program을 대안으로 사용합니다.');
+          const { data: dailyData, error: dailyErr } = await supabase
+            .from('routines')
+            .select('*')
+            .eq('name', 'Daily Training Program')
+            .limit(1);
+
+          if (dailyErr || !dailyData || dailyData.length === 0) {
+            throw new Error(`조건에 맞는 루틴을 찾을 수 없습니다. 목표: ${goal}, 빈도: ${frequency}`);
+          }
+
+          console.log('✅ Daily Training Program 루틴 사용:', dailyData[0]);
+          return dailyData[0];
         }
 
         console.log('✅ 대안 루틴 조회 성공:', alternativeData[0]);

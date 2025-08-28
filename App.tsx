@@ -6,6 +6,7 @@ import {SafeAreaProvider} from 'react-native-safe-area-context';
 import { OnboardingProvider, useOnboarding } from './src/contexts/OnboardingContext';
 import OnboardingNavigator from './src/navigation/OnboardingNavigator';
 import TodaysWorkoutScreen from './src/screens/TodaysWorkoutScreen';
+import ExerciseDetailScreen from './src/screens/ExerciseDetailScreen';
 
 
 
@@ -62,6 +63,14 @@ const ProfileScreen = () => (
     <Text style={styles.title}>프로필</Text>
     <Text style={styles.subtitle}>프로필 화면이 여기에 표시됩니다.</Text>
   </View>
+);
+
+// 메인 스택 네비게이터
+const MainStackNavigator = () => (
+  <Stack.Navigator screenOptions={{headerShown: false}}>
+    <Stack.Screen name="Tabs" component={TabNavigator} />
+    <Stack.Screen name="ExerciseDetail" component={ExerciseDetailScreen} />
+  </Stack.Navigator>
 );
 
 // 탭 네비게이터
@@ -136,7 +145,7 @@ const AppContent: React.FC = () => {
       {!isOnboardingComplete ? (
         <Stack.Screen name="Onboarding" component={OnboardingNavigator} />
       ) : (
-        <Stack.Screen name="Main" component={TabNavigator} />
+        <Stack.Screen name="Main" component={MainStackNavigator} />
       )}
     </Stack.Navigator>
   );

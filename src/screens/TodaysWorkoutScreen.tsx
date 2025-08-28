@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { DatabaseService } from '../services/database';
 import { UserService } from '../services/UserService';
 import { RoutineExercise, Exercise } from '../types/database';
@@ -58,6 +59,7 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({
 };
 
 const TodaysWorkoutScreen: React.FC = () => {
+  const navigation = useNavigation();
   const [exercises, setExercises] = useState<(RoutineExercise & { exercises: Exercise })[]>([]);
   const [completedExercises, setCompletedExercises] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
@@ -144,9 +146,11 @@ const TodaysWorkoutScreen: React.FC = () => {
   };
 
   const handleExercisePress = (exercise: RoutineExercise & { exercises: Exercise }) => {
-    // 운동 상세 화면으로 네비게이션 (추후 구현)
     console.log('운동 상세 화면으로 이동:', exercise.exercises.name);
-    Alert.alert('운동 상세', `${exercise.exercises.name} 상세 화면입니다.`);
+    navigation.navigate('ExerciseDetail', {
+      exerciseId: exercise.exercise_id,
+      exerciseName: exercise.exercises.name,
+    });
   };
 
   const getCompletionProgress = () => {

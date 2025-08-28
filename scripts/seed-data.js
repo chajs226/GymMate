@@ -197,6 +197,13 @@ const routines = [
     goal: 'General Fitness',
     frequency: '3 days/week',
     difficulty: 'beginner'
+  },
+  {
+    name: 'Daily Training Program',
+    description: '매일 다른 부위를 훈련하는 7일 종합 루틴 (테스트용)',
+    goal: 'Muscle Gain',
+    frequency: '7 days/week',
+    difficulty: 'beginner'
   }
 ];
 
@@ -305,7 +312,45 @@ const routineExercises = [
   { routine_name: 'Beginner General Fitness 3-Day Split', day: 3, exercise_name: 'Dumbbell Bench Press', sets: 3, reps: '10-12', rest_time: 90, order_index: 1 },
   { routine_name: 'Beginner General Fitness 3-Day Split', day: 3, exercise_name: 'Seated Cable Row', sets: 3, reps: '10-12', rest_time: 90, order_index: 2 },
   { routine_name: 'Beginner General Fitness 3-Day Split', day: 3, exercise_name: 'Lateral Raises', sets: 3, reps: '10-12', rest_time: 60, order_index: 3 },
-  { routine_name: 'Beginner General Fitness 3-Day Split', day: 3, exercise_name: 'Tricep Dips', sets: 2, reps: '10-12', rest_time: 60, order_index: 4 }
+  { routine_name: 'Beginner General Fitness 3-Day Split', day: 3, exercise_name: 'Tricep Dips', sets: 2, reps: '10-12', rest_time: 60, order_index: 4 },
+
+  // Daily Training Program (7일 루틴)
+  // Day 1 (월요일): Chest & Triceps
+  { routine_name: 'Daily Training Program', day: 1, exercise_name: 'Barbell Bench Press', sets: 3, reps: '8-10', rest_time: 90, order_index: 1 },
+  { routine_name: 'Daily Training Program', day: 1, exercise_name: 'Dumbbell Bench Press', sets: 3, reps: '10-12', rest_time: 90, order_index: 2 },
+  { routine_name: 'Daily Training Program', day: 1, exercise_name: 'Push-ups', sets: 3, reps: '8-12', rest_time: 60, order_index: 3 },
+  { routine_name: 'Daily Training Program', day: 1, exercise_name: 'Tricep Dips', sets: 3, reps: '8-12', rest_time: 60, order_index: 4 },
+
+  // Day 2 (화요일): Back & Biceps
+  { routine_name: 'Daily Training Program', day: 2, exercise_name: 'Lat Pulldown', sets: 3, reps: '8-10', rest_time: 90, order_index: 1 },
+  { routine_name: 'Daily Training Program', day: 2, exercise_name: 'Seated Cable Row', sets: 3, reps: '10-12', rest_time: 90, order_index: 2 },
+  { routine_name: 'Daily Training Program', day: 2, exercise_name: 'Dumbbell Row', sets: 3, reps: '10-12', rest_time: 90, order_index: 3 },
+  { routine_name: 'Daily Training Program', day: 2, exercise_name: 'Bicep Curls', sets: 3, reps: '10-12', rest_time: 60, order_index: 4 },
+
+  // Day 3 (수요일): Legs & Glutes
+  { routine_name: 'Daily Training Program', day: 3, exercise_name: 'Squats', sets: 3, reps: '8-10', rest_time: 120, order_index: 1 },
+  { routine_name: 'Daily Training Program', day: 3, exercise_name: 'Leg Press', sets: 3, reps: '10-12', rest_time: 120, order_index: 2 },
+  { routine_name: 'Daily Training Program', day: 3, exercise_name: 'Lunges', sets: 3, reps: '10-12 each', rest_time: 90, order_index: 3 },
+
+  // Day 4 (목요일): Shoulders
+  { routine_name: 'Daily Training Program', day: 4, exercise_name: 'Overhead Press', sets: 3, reps: '8-10', rest_time: 90, order_index: 1 },
+  { routine_name: 'Daily Training Program', day: 4, exercise_name: 'Lateral Raises', sets: 3, reps: '10-12', rest_time: 60, order_index: 2 },
+  { routine_name: 'Daily Training Program', day: 4, exercise_name: 'Push-ups', sets: 3, reps: '10-15', rest_time: 60, order_index: 3 },
+
+  // Day 5 (금요일): Arms Focus
+  { routine_name: 'Daily Training Program', day: 5, exercise_name: 'Bicep Curls', sets: 4, reps: '10-12', rest_time: 60, order_index: 1 },
+  { routine_name: 'Daily Training Program', day: 5, exercise_name: 'Tricep Dips', sets: 4, reps: '8-12', rest_time: 60, order_index: 2 },
+  { routine_name: 'Daily Training Program', day: 5, exercise_name: 'Dumbbell Bench Press', sets: 3, reps: '10-12', rest_time: 90, order_index: 3 },
+
+  // Day 6 (토요일): Full Body Light
+  { routine_name: 'Daily Training Program', day: 6, exercise_name: 'Push-ups', sets: 3, reps: '12-15', rest_time: 45, order_index: 1 },
+  { routine_name: 'Daily Training Program', day: 6, exercise_name: 'Squats', sets: 3, reps: '12-15', rest_time: 60, order_index: 2 },
+  { routine_name: 'Daily Training Program', day: 6, exercise_name: 'Lateral Raises', sets: 3, reps: '12-15', rest_time: 45, order_index: 3 },
+
+  // Day 7 (일요일): Recovery & Core
+  { routine_name: 'Daily Training Program', day: 7, exercise_name: 'Push-ups', sets: 2, reps: '10-15', rest_time: 60, order_index: 1 },
+  { routine_name: 'Daily Training Program', day: 7, exercise_name: 'Lunges', sets: 2, reps: '10-12 each', rest_time: 60, order_index: 2 },
+  { routine_name: 'Daily Training Program', day: 7, exercise_name: 'Bicep Curls', sets: 2, reps: '10-12', rest_time: 45, order_index: 3 }
 ];
 
 // 대체 운동 관계

@@ -51,6 +51,13 @@ const FrequencySelectionScreen: React.FC<FrequencySelectionScreenProps> = ({
       icon: '🚀',
       intensity: '고급',
     },
+    {
+      id: '7 days/week',
+      title: '매일 (7일)',
+      description: '테스트용 - 매일 다른 부위 운동',
+      icon: '🔥',
+      intensity: '테스트',
+    },
   ];
 
   const handleFrequencySelect = (frequency: string) => {
