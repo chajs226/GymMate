@@ -171,6 +171,27 @@ const ExerciseDetailScreen: React.FC = () => {
               const updatedLogs = await WorkoutStateService.getRecentPerformanceLogs(userId, exerciseId, 3);
               setRecentLogs(updatedLogs);
 
+              // 운동 완료 상태로 자동 표시
+              try {
+                const currentDay = new Date().getDay() === 0 ? 7 : new Date().getDay(); // 일요일을 7로 변경
+                const userRoutineResult = await DatabaseService.getUserRoutine(userId);
+                const userRoutineId = userRoutineResult?.routine_id || routineId;
+                
+                if (userRoutineId) {
+                  const currentSession = await WorkoutStateService.getCurrentSession(
+                    userId,
+                    userRoutineId,
+                    currentDay
+                  );
+                  
+                  // 운동을 완료 상태로 표시
+                  await WorkoutStateService.toggleExerciseCompletion(currentSession, exerciseId);
+                  console.log('✅ 운동 완료 상태 자동 업데이트:', exerciseId);
+                }
+              } catch (error) {
+                console.warn('⚠️ 운동 완료 상태 업데이트 실패 (기록은 저장됨):', error);
+              }
+
               console.log('💾 운동 기록 저장 완료:', {
                 exerciseId,
                 weight: weightNum,
@@ -178,7 +199,7 @@ const ExerciseDetailScreen: React.FC = () => {
                 reps: reps,
               });
 
-              Alert.alert('완료', '운동 기록이 저장되었습니다! 🎉');
+              Alert.alert('완료', '운동 기록이 저장되었습니다! 🎉\n운동이 완료 상태로 표시됩니다.');
               
             } catch (error) {
               console.error('❌ 운동 기록 저장 실패:', error);

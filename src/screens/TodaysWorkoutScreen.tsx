@@ -9,12 +9,13 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { DatabaseService } from '../services/database';
 import { UserService } from '../services/UserService';
 import { WorkoutStateService, WorkoutSession } from '../services/WorkoutStateService';
 import { SyncService } from '../services/SyncService';
 import { RoutineExercise, Exercise } from '../types/database';
+import WorkoutCompletionModal from '../components/WorkoutCompletionModal';
 
 interface ExerciseCardProps {
   exercise: RoutineExercise & { exercises: Exercise };
@@ -67,6 +68,8 @@ const TodaysWorkoutScreen: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [workoutTitle, setWorkoutTitle] = useState('');
   const [userRoutineId, setUserRoutineId] = useState<string | null>(null);
+  const [showCompletionModal, setShowCompletionModal] = useState(false);
+  const [userName, setUserName] = useState('GymMate 사용자');
 
   // 현재 요일 계산 (1: 월요일, 7: 일요일)
   const getCurrentDayOfWeek = () => {
@@ -180,13 +183,9 @@ const TodaysWorkoutScreen: React.FC = () => {
       if (completedSession.isCompleted && !currentSession.isCompleted) {
         setCurrentSession(completedSession);
         
-        // 완료 축하 메시지 표시
+        // 완료 모달 표시
         setTimeout(() => {
-          Alert.alert(
-            '운동 완료! 🎉',
-            '오늘의 모든 운동을 완료했습니다!\n훌륭한 운동이었어요!',
-            [{ text: '확인', style: 'default' }]
-          );
+          setShowCompletionModal(true);
         }, 100);
       }
     } catch (error) {
@@ -209,9 +208,53 @@ const TodaysWorkoutScreen: React.FC = () => {
     return { total, completed, percentage: total > 0 ? (completed / total) * 100 : 0 };
   };
 
+  const getCompletedExercisesWithDetails = () => {
+    if (!currentSession) return [];
+    
+    return exercises
+      .filter(exercise => currentSession.completedExercises.has(exercise.exercise_id))
+      .map(exercise => ({
+        ...exercise.exercises,
+        sets: exercise.sets,
+        reps: exercise.reps,
+      }));
+  };
+
+  const handleCloseCompletionModal = () => {
+    setShowCompletionModal(false);
+  };
+
   useEffect(() => {
     loadTodaysWorkout();
   }, []);
+
+  // 화면 포커스 시 현재 세션 상태 새로고침
+  useFocusEffect(
+    React.useCallback(() => {
+      const refreshSession = async () => {
+        if (userRoutineId && currentSession) {
+          try {
+            const userId = await UserService.getCurrentUserId();
+            const currentDay = getCurrentDayOfWeek();
+            
+            // 현재 세션 상태 다시 로드
+            const updatedSession = await WorkoutStateService.getCurrentSession(
+              userId,
+              userRoutineId,
+              currentDay
+            );
+            
+            setCurrentSession(updatedSession);
+            console.log('🔄 세션 상태 새로고침 완료');
+          } catch (error) {
+            console.warn('⚠️ 세션 새로고침 실패:', error);
+          }
+        }
+      };
+
+      refreshSession();
+    }, [userRoutineId, currentSession?.id])
+  );
 
   // 세션 완료 상태 모니터링 (중복 Alert 방지를 위해 제거)
   // toggleExerciseComplete에서 직접 처리함
@@ -330,6 +373,16 @@ const TodaysWorkoutScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
       )}
+
+      {/* 운동 완료 모달 */}
+      <WorkoutCompletionModal
+        visible={showCompletionModal}
+        onClose={handleCloseCompletionModal}
+        userName={userName}
+        workoutDate={new Date().toISOString()}
+        workoutTitle={workoutTitle}
+        completedExercises={getCompletedExercisesWithDetails()}
+      />
     </SafeAreaView>
   );
 };
