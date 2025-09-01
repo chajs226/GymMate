@@ -16,6 +16,8 @@ import { WorkoutStateService, WorkoutSession } from '../services/WorkoutStateSer
 import { SyncService } from '../services/SyncService';
 import { RoutineExercise, Exercise } from '../types/database';
 import WorkoutCompletionModal from '../components/WorkoutCompletionModal';
+import { useStyles } from '../styles/useStyles';
+import { theme } from '../styles/theme';
 
 interface ExerciseCardProps {
   exercise: RoutineExercise & { exercises: Exercise };
@@ -30,31 +32,33 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({
   onToggleComplete,
   onExercisePress,
 }) => {
+  const commonStyles = useStyles();
+  
   return (
-    <View style={styles.exerciseCard}>
+    <View style={workoutStyles.exerciseCard}>
       <TouchableOpacity 
-        style={styles.exerciseContent}
+        style={workoutStyles.exerciseContent}
         onPress={onExercisePress}
         activeOpacity={0.7}
       >
-        <View style={styles.exerciseInfo}>
-          <Text style={styles.exerciseName}>{exercise.exercises.name}</Text>
-          <Text style={styles.exerciseDetails}>
+        <View>
+          <Text style={workoutStyles.exerciseName}>{exercise.exercises.name}</Text>
+          <Text style={workoutStyles.exerciseDetails}>
             {exercise.sets}세트 × {exercise.reps}회
           </Text>
           {exercise.rest_time && (
-            <Text style={styles.restTime}>휴식: {exercise.rest_time}초</Text>
+            <Text style={workoutStyles.restTime}>휴식: {exercise.rest_time}초</Text>
           )}
         </View>
       </TouchableOpacity>
       
       <TouchableOpacity
-        style={[styles.checkbox, isCompleted && styles.checkboxCompleted]}
+        style={[commonStyles.checkbox, isCompleted && commonStyles.checkboxChecked]}
         onPress={onToggleComplete}
         activeOpacity={0.7}
       >
         {isCompleted && (
-          <Text style={styles.checkmark}>✓</Text>
+          <Text style={commonStyles.checkboxText}>✓</Text>
         )}
       </TouchableOpacity>
     </View>
@@ -70,6 +74,8 @@ const TodaysWorkoutScreen: React.FC = () => {
   const [userRoutineId, setUserRoutineId] = useState<string | null>(null);
   const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [userName, setUserName] = useState('GymMate 사용자');
+  
+  const styles = useStyles();
 
   // 현재 요일 계산 (1: 월요일, 7: 일요일)
   const getCurrentDayOfWeek = () => {
@@ -261,9 +267,9 @@ const TodaysWorkoutScreen: React.FC = () => {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#007AFF" />
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.loading}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
           <Text style={styles.loadingText}>오늘의 운동을 불러오는 중...</Text>
         </View>
       </SafeAreaView>
@@ -273,25 +279,25 @@ const TodaysWorkoutScreen: React.FC = () => {
   const { total, completed, percentage } = getCompletionProgress();
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>{workoutTitle}</Text>
-        <View style={styles.progressContainer}>
+    <SafeAreaView style={styles.safeArea}>
+      <View style={workoutStyles.header}>
+        <Text style={styles.textHeading2}>{workoutTitle}</Text>
+        <View style={styles.rowBetween}>
           <View style={styles.progressBar}>
             <View 
-              style={[styles.progressFill, { width: `${percentage}%` }]}
+              style={[styles.progressBarFill, { width: `${percentage}%` }]}
             />
           </View>
-          <Text style={styles.progressText}>
+          <Text style={[styles.textBodySecondary, workoutStyles.progressText]}>
             {completed}/{total} 완료
           </Text>
         </View>
       </View>
 
       {exercises.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>오늘은 휴식일입니다! 🏖️</Text>
-          <Text style={styles.emptySubtext}>내일 다시 만나요!</Text>
+        <View style={workoutStyles.emptyContainer}>
+          <Text style={workoutStyles.emptyText}>오늘은 휴식일입니다! 🏖️</Text>
+          <Text style={workoutStyles.emptySubtext}>내일 다시 만나요!</Text>
         </View>
       ) : (
         <FlatList
@@ -305,7 +311,7 @@ const TodaysWorkoutScreen: React.FC = () => {
               onExercisePress={() => handleExercisePress(item)}
             />
           )}
-          contentContainerStyle={styles.exercisesList}
+          contentContainerStyle={workoutStyles.exercisesList}
           showsVerticalScrollIndicator={false}
         />
       )}
@@ -387,155 +393,65 @@ const TodaysWorkoutScreen: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F2F2F7',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: 12,
-    fontSize: 16,
-    color: '#8E8E93',
-  },
+// 컴포넌트 전용 스타일
+const workoutStyles = StyleSheet.create({
   header: {
-    paddingHorizontal: 20,
-    paddingVertical: 20,
-    backgroundColor: '#FFFFFF',
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.lg,
+    backgroundColor: theme.colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E5EA',
+    borderBottomColor: theme.colors.border,
+    gap: theme.spacing.md,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#1C1C1E',
-    marginBottom: 12,
-  },
-  progressContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  progressBar: {
-    flex: 1,
-    height: 8,
-    backgroundColor: '#E5E5EA',
-    borderRadius: 4,
-    marginRight: 12,
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: '#34C759',
-    borderRadius: 4,
-  },
+
   progressText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#007AFF',
+    fontSize: theme.typography.fontSize.sm,
+    fontWeight: theme.typography.fontWeight.semibold,
+    color: theme.colors.primary,
+    minWidth: 80,
+    textAlign: 'right',
   },
   exercisesList: {
-    padding: 20,
+    padding: theme.spacing.lg,
   },
   exerciseCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
+    ...theme.stylePresets.card,
     flexDirection: 'row',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    marginBottom: theme.spacing.md,
+    paddingVertical: theme.spacing.base,
   },
   exerciseContent: {
     flex: 1,
   },
-  exerciseInfo: {
-    flex: 1,
-  },
   exerciseName: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#1C1C1E',
-    marginBottom: 4,
+    ...theme.stylePresets.text.heading3,
+    marginBottom: theme.spacing.xs,
   },
   exerciseDetails: {
-    fontSize: 16,
-    color: '#007AFF',
-    fontWeight: '500',
-    marginBottom: 2,
+    fontSize: theme.typography.fontSize.base,
+    color: theme.colors.primary,
+    fontWeight: theme.typography.fontWeight.medium,
+    marginBottom: theme.spacing.xs,
   },
   restTime: {
-    fontSize: 14,
-    color: '#8E8E93',
+    ...theme.stylePresets.text.caption,
   },
-  checkbox: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    borderWidth: 2,
-    borderColor: '#C7C7CC',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginLeft: 12,
-  },
-  checkboxCompleted: {
-    backgroundColor: '#34C759',
-    borderColor: '#34C759',
-  },
-  checkmark: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
+
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 40,
+    paddingHorizontal: theme.spacing['3xl'],
   },
   emptyText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#1C1C1E',
+    ...theme.stylePresets.text.heading2,
     textAlign: 'center',
-    marginBottom: 8,
+    marginBottom: theme.spacing.sm,
   },
   emptySubtext: {
-    fontSize: 16,
-    color: '#8E8E93',
+    ...theme.stylePresets.text.bodySecondary,
     textAlign: 'center',
-  },
-  debugContainer: {
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-    gap: 8,
-  },
-  debugButton: {
-    backgroundColor: '#FF9500',
-    borderRadius: 8,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    alignItems: 'center',
-  },
-  debugButtonText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  dangerButton: {
-    backgroundColor: '#FF3B30',
-  },
-  dangerText: {
-    color: '#FFFFFF',
   },
 });
 

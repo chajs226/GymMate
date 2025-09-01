@@ -13,11 +13,14 @@ import {
   Image,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import Video from 'react-native-video';
 import { DatabaseService } from '../services/database';
 import { UserService } from '../services/UserService';
 import { WorkoutStateService } from '../services/WorkoutStateService';
 import { Exercise } from '../types/database';
+import { OptimizedVideo } from '../components/OptimizedVideo';
+import { AccessibleButton, AccessibleHeader } from '../components/AccessibleButton';
+import { useStyles } from '../styles/useStyles';
+import { theme } from '../styles/theme';
 
 interface ExerciseDetailScreenProps {
   route: {
@@ -285,23 +288,24 @@ const ExerciseDetailScreen: React.FC = () => {
 
         {/* 비디오 섹션 */}
         <View style={styles.videoContainer}>
-          {exercise.video_url && !videoError ? (
-            <Video
-              source={{ uri: exercise.video_url }}
+          {exercise.video_url ? (
+            <OptimizedVideo
+              uri={exercise.video_url}
               style={styles.video}
               resizeMode="contain"
-              repeat={true}
+              autoPlay={true}
+              loop={true}
               muted={true}
-              paused={false}
-              onError={onVideoError}
               controls={false}
-              poster={undefined}
+              onError={onVideoError}
+              accessibilityLabel={`${exercise.name} 운동 영상`}
+              placeholder="운동 영상을 불러오는 중..."
             />
           ) : (
             <View style={styles.videoPlaceholder}>
               <Text style={styles.videoPlaceholderIcon}>🎥</Text>
               <Text style={styles.videoPlaceholderText}>
-                {videoError ? '비디오를 불러올 수 없습니다' : '비디오 준비 중'}
+                영상이 준비되지 않았습니다
               </Text>
             </View>
           )}

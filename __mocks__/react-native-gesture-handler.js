@@ -1,0 +1,43 @@
+const View = require('react-native/Libraries/Components/View/View');
+const Text = require('react-native/Libraries/Text/Text');
+const TouchableOpacity = require('react-native/Libraries/Components/Touchable/TouchableOpacity');
+
+module.exports = {
+  TouchableOpacity,
+  TouchableHighlight: TouchableOpacity,
+  TouchableWithoutFeedback: TouchableOpacity,
+  TouchableNativeFeedback: TouchableOpacity,
+  Swipeable: View,
+  DrawerLayout: View,
+  ScrollView: View,
+  Slider: View,
+  Switch: View,
+  TextInput: View,
+  ToolbarAndroid: View,
+  ViewPagerAndroid: View,
+  DrawerLayoutAndroid: View,
+  WebView: View,
+  NativeViewGestureHandler: View,
+  TapGestureHandler: View,
+  FlingGestureHandler: View,
+  ForceTouchGestureHandler: View,
+  LongPressGestureHandler: View,
+  PanGestureHandler: View,
+  PinchGestureHandler: View,
+  RotationGestureHandler: View,
+  RawButton: View,
+  BaseButton: View,
+  RectButton: View,
+  BorderlessButton: View,
+  FlatList: View,
+  gestureHandlerRootHOC: jest.fn(component => component),
+  Directions: {},
+  State: {
+    UNDETERMINED: 0,
+    FAILED: 1,
+    BEGAN: 2,
+    CANCELLED: 3,
+    ACTIVE: 4,
+    END: 5,
+  },
+};
